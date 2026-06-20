@@ -1,0 +1,24 @@
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.toc
+*.lof
+*.lot
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Reference PDFs (large, copyright-protected)
+*.pdf
+
+# Keep simulation-generated PDFs (figures)
+!fig*.pdf
+!main.pdf
