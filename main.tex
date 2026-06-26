@@ -32,72 +32,98 @@
 \begin{document}
 
 %=========================================================
-\title{CTRL: A Joint Cluster Head Selection, Task Offloading, and UAV Redeployment Scheme for Load-Balanced FANETs}
 
-\author{
-Author Name
-}
 
+\title{CTRL: A Joint Framework for Health-Aware Cluster-Head Selection Cooperative Task Offloading and Worker UAV Selection in FANETs}
+
+\author{\IEEEauthorblockN{Abhishek Kumar Pandey, Karan Yadav, Adarsh Narayan, 
+        and Arijit Roy,~\IEEEmembership{Senior Member,~IEEE}}
+\IEEEauthorblockA{Department of Computer Science and Engineering\\
+Indian Institute of Technology Patna, Patna 801106, India\\
+Email: \{abhishek\_2422cs16,karan\_2511ai24,arijitroy\}@iitp.ac.in}}
 \maketitle
 
 %=========================================================
 \begin{abstract}
-
-% Abstract
-
+Flying ad hoc networks (FANETs), struggle to keep tasks running reliably because the UAVs move frequently, have limited battery power,deal with changing wireless links, and get tasks arriving at different rate in various groups.Existing methods for UAV clustering and task offloading handle Cluster Head(CH) task offloading, and UAV redeployment as separate problems. This separation cause some cluster to become overloaded, reduces resource utilization, and increases service delay. This paper presents CTRL, a combined system that handles choosing cluster leaders, moving tasks to other locations, and repositioning UAVs in FANETs.CTRL chooses a cluster head by using a model that looks at how much energy is left, how hot the device is, how well the connections are, and how good the device is at doing calculations. When a cluster gets too loaded, the chosen leader in that cluster starts working with others by picking a helpful UAVs from nearby clusters, but only if it meets certain time and availability rules. CTRL also sends the chosen worker UAV back to the overloaded cluster to help balance the workload over time and keep the tasks run smoothly. The new framework gives a solid theory for choosing cluster heads and brings together offloading and redeployment into one system that helps balance the load. The simulation results indicate that CTRL decreases task delay, enhances energy efficiency, and provides a more even spread of work compared to current methods used for clustering drones and assigning tasks.
 \end{abstract}
 
+
 %=========================================================
-\begin{IEEEkeywords}
+\begin{IEEEkeywords}Flying ad hoc networks, UAV clustering, Task offloading, Cluster Head selection, Load balancing\end{IEEEkeywords}
 
-% Keywords
-
-\end{IEEEkeywords}
 
 %=========================================================
 \section{Introduction}
 
-The rapid growth of the uses of unmanned aerial vehicles (UAV) in broader domains including agriculture, military operations, land surveying, disaster management, and other emerging fields for UAV applications. However for the seamless and efficient uses of UAVs manual control operations are often insufficient for utilize full functionality of UAVs, so UAVs are required to have fully automatic control so that  full functionality is used efficiently and provides satisfactory performance to end users. Users are frequently generating data which are  retrieving  and sending in a time period which causes network overload. So getting rid of this challenge Mobile edge computing (MEC) is deployed at Unmanned aerial vehicle(UAV) which alleviate the task by providing computation offloading on edge node and provides low latency to end user for a better reliability and connectivity\cite{ref1}. In base stations and UAVs both have computing power for the computation, can assigned to offload the UAV task. For UAV task offloading it is difficult to determine how the number clustering center for balancing between energy consumpution of UAVs and the clustering centers\cite {ref2}. Controlling UAV swarm network is tedious task without of central authority, hence author in\cite {ref3} proposed a cluster head in hierarchical UAV swarm network act as a communication and coordination centers for other UAVs in a swarm. In wireless sensor networks(WSNs) the sensor nodes(SNs) continuously communicate with nearby SNs, which causes rapid energy depletion. So a cluster head is required to have a better co-ordination between Sensor nodes for load balancing and optimization among sensor nodes to minimize the depletion of energy flows\cite{ref4}.
+The rapid growth of unmanned aerial vehicles (UAVs) uses in multiple parts of our surrounding like agriculture, military operations, land surveying, disaster management, and other emerging domains. However, manual control is often insufficient to exploit the full functionality of UAVs, so fully automatic control is required for satisfactory end-user performance. Since users frequently generate and retrieve data, network overloads results, Mobile Edge Computing (MEC) deployed at the UAV alleviates this by offloading computation to edge nodes, lowering latency and improving reliability and connectivity\cite{ref1}. Both base stations and UAVs possess computing power that can be assigned to offload UAV tasks, but determining the appropriate number of clustering centers to balance energy consumption against clustering overhead remains difficult\cite{ref2}. Coordinating a UAV swarm without a central authority is tedious, motivating a cluster head in a hierarchical UAV swarm network to act as a communication and coordination center for other UAVs\cite{ref3}. Similarly, in wireless sensor networks (WSNs), continuous communication among nearby sensor nodes (SNs) causes rapid energy depletion, so a cluster head is needed to coordinate SNs for load balancing and to minimize energy depletion\cite{ref4}.
 
- Unmanned Aerial Vehicle(UAVs) are widely used in various real-time applications such as disaster management,survelliance,military operation,package delivery because of UAVs are capable of easy deployment,flexibilty and mobility.In past few years,UAV swarm network have gained popularity to collaboratively performs complex task efficiently than a uni UAV.
-With compact sizes of UAVs  have limited computation power,storage capacity and battery.
-UAVs form swarm of network but managing and co-ordinating among them is tedious task. To improve the co-ordination among UAVs,clustering techniques are mainly used for dividing the UAVs into multiple clusters.In each of a clusters there contains a Cluster Head(CH) which have primarly task to manage task coordination,communication management to nearby cluster head of other clusters,and resource allocation among different UAVs.The cluster based framework reduces overhead in communication,network scalabity improves and efficient utilization of UAVs are done.Along with it cluster head also enables the inter-cluster communication and provides assisting in stability of workload distribution efficienlty.
-In static UAV environments, task demand not vary continuously but in dynamic environment,task demand vary continuously across the different clusters.In dynamic some of the cluster have utilized fully(overloaded) due to heavily task requests while other donot utilized fully.This imbalance causes increase in processing delay,communication overhead,energy degradation which degraded the overall network perfomance drastically. 
-The solution of this kind of problem is UAV redeployment among clusters.In this type of strategy, the least used UAV from that cluster can be transferred to overloaded cluster to facilitate task execution and balance the load . However,choosing suitable UAVs for transefring from least overloaded to overloaded cluster is a tedious task due to dynamic network conditions,limited energy resources, and mobility of UAVs and users on ground.For smooth coordination among different clusters to figure out which UAV migrates, in what situation migration performs and how the task distribution divides efficiently.
-For UAV redeployment and load balancing a game theoretic non coperative approach is followed.
+UAVs are widely used in real-time applications such as disaster management, surveillance, military operations, and package delivery due to their ease of deployment, flexibility, and mobility. UAV swarm networks have gained popularity for collaboratively performing complex tasks more efficiently than a single UAV, despite the limited computation power, storage, and battery imposed by their compact size. Coordinating UAVs within a swarm is tedious, so clustering techniques divide UAVs into multiple clusters, each with a Cluster Head (CH) responsible for task coordination, communication with neighboring cluster heads, and resource allocation. This cluster-based framework reduces communication overhead, improves scalability, and enables efficient inter-cluster communication and stable workload distribution. While task demand stays largely static in static UAV environments, it varies continuously across clusters in dynamic environments, causing some clusters to become overloaded while others remain underutilized. This imbalance increases processing delay, communication overhead, and energy degradation, degrading overall network performance.
+
+UAV redeployment among clusters addresses this imbalance by transferring an underused UAV to an overloaded cluster to facilitate task execution and balance load. However, selecting suitable UAVs for such transfers is challenging given dynamic network conditions, limited energy resources, and the mobility of both UAVs and ground users, raising the question of which UAV should migrate, under what conditions, and how task distribution should be divided efficiently. To address UAV redeployment and load balancing, a non-cooperative game-theoretic approach is adopted.
 
 \subsection{Motivation}
 Unmanned Aerial Vehicles(UAVs) are widely used in many real world applications because of small sizes of UAVs ,such as disaster management,surveillance and package delivery from warehouses to home.In spite of small size of UAVs which forms swarm UAV network, is a complex task because of network toplology changes,limited resource and frequent movement of UAVs.To tackle these challenges multiple cluster forms,where each cluster have dedicated Cluster Head(CH) which manages UAVs in that particular cluster for resource sharing,user reassignment and energy efficiently.
 With such cluster system formation by UAV ,Cluster Head also communicate with other cluster to provide facility to redeployment of UAVs from one to another at the time of addition UAV needed when that particular cluster cannot handle with existing UAV causes can be limited resources or load has increased drastically in dyanamic environment.
 Therefore, combining a clustering mechanism with a non- cooperative game-theoretic approach gives an effective and reliable solution for redeployment of UAV in swarm of network.By integrating those two things scalabilty,reliability improves in UAV swarm networks.
 
-\subsection{Research Challenges}
 
 \subsection{Contribution}
+To deal with changing workloads, unreliable UAVs connections, and limited resources when tasks are executed by UAVs in FANETs, we introduce \textbf{CTRL}, a single framework that is aware of system health.This framework works together to choose cluster head,share task cooperatively, and pick worker UAVs for cluster that are overloaded. The main points that this work listed below
+
+\begin{itemize}
+\item {First,} We create a method for choosing cluster heads that takes into account the specific working conditions of UAVs, such as remaining energy, temperature, link quality,and computing power. CTRL formulates CH election as non-cooperative game where each UAV chooses its broadcast power to balance SINR based coverage gain with energy expenditure, rather than the existing clustering and CH selection methods that rely mainly on residual energy, connectivity, or learning-based head detection\cite{ref3,ref4}.This allows unhealthy, overheated, weakly connected,or low energy UAVs to automatically leave the list of possible CHs without needing a fixed exclusion limit set by someone else.
+
+\item {Second,} Unlike other UAV MEC studies that handle task offloading, trajectory control, and resource allocations as separate issues \cite{ref1,ref2,ref16}, we combine CH selection and cooperative inter cluster offloading into one process. When a cluster gets overloaded, the chosen CH sends a Help Request Beacon(HRB) that includes details about the task, when it needs to be done, how much energy is required, and where the cluster is located. The nearby cluster that helps is chosen by looking at several things together, like how good the signal is between clusters, how far they are from each other, how many steps it takes to communicate, how many worker drones are available, how much extra power there is, how reliable past tasks were completed, whether the task done on time and how much energy left.
+
+\item {Third,} Within the neighboring cluster chosen, we develop a strategy for selecting worker UAVs that is based on Nash bargaining. Instead of just giving tasks based on leftover energy, distance, or how much computing power is left \cite{ref1,ref2}, CTRL looks at each possible worker UAV using a surplus utility that considers their health, remaining CPU speed, how reliable the connection, quality of service, mobility exposure, total time to finish the task and energy feasibility. This ensures that the selected worker UAV improves the overload cluster's service capability while remaining individually rational for the assisting UAV.
+
+\item {Finally,} 
+
+
+\end{itemize}
 
 %=========================================================
 \section{Related Work}
 
-\subsection{UAV Applications}
+\subsection{UAV Clustering and Cluster-Head Selection}
 
-\subsection{UAV-as-a-Service}
+Clustering is commonly used in flying ad hoc networks(FANETs) to improve scalability, reduce communication overhead, and support coordination among mobile UAVs. Mozaffari et al. discuss key challenges in UAV enabled wireless networks. These challenges include dynamic topology, energy efficiency, three dimensional deployment, and reliable communication \cite{ref7}. Zhang et al.proposed a location and velocity prediction assisted FANET clustering algorithm. This algorithm aims to improve cluster stability in highly mobile UAV networks \cite{ref6}. Mou et al. developed a graph self supervised learning method for detecting cluster heads(CH) in hierarchical UAV swarms \cite{ref3}. Energy aware CH selection studied in sensor network environments. This research seeks to reduce energy depletion and extend network lifetime \cite{ref4}. However, these studies mainly look at mobility connectivity, residual energy, or learning based CH detection. They do not consider residual energy, thermal state, link quality and computation capability together when electing CHs. In contrast, CTRL treats CH selection as a health aware non cooperative game. In this model, each UAV adjusts its broadcast power by balancing SINR based coverage gain and energy use.
+
+\subsection{Task Offloading and Resource Allocation in UAV-Assisted MEC}
+
+UAV-assisted mobile edge computing (MEC) extensively studied to minimize task execution latency and enhance computational resources in dynamic wireless networks. Zhao \emph{et al.} introduced a multi agent deep reinforcement learning framewrok for task offloading in UAV supported MEC, where various agents learn offloding choices amidst changing network conditions \cite{ref1}. Guo \emph{et al.} investigated cooperative task offloading and resource distribution among multiple UAVs in 5G Advanced and beyond, aim to enhance computational efficiency and minimize service delay \cite{ref2}. Li\emph{et al.} collaboratively enhanced resource distribution and UAV path for energy efficient UAV supported MEC \cite{ref16}. Wang \emph{et al.} implemented deep reinforcement learning for dyanmic trajectory management in UAV assited MEC amids varying network condition \cite{ref13}. While these studies enhance task offloading, resource allocation, and trajectory management, they typically optimize these choices once the serving UAV or network confgiuration has already been established. CTRL distinguishes itself from these studies by linking CH electionto cooperative inter cluster offloading and by resewing outputs from the election stage, such as the UAV health index, equilibrium broadcast power and utility score.
+
+\subsection{Load-Aware Inter-Cluster Offloading and Worker UAV Selection}
+
+
 
 \subsection{Research Gap}
 
+Existing studies usually treat CH selection, task offloading, resource allocation, and worker UAV selection as separate modules. This separation can lead to overloaded clusters, inefficient resource utilization, high service delay, and premature energy depletion of important UAVs. CTRL fills this gap by jointly performing health-aware CH election, cooperative inter-cluster offloading, and Nash-bargaining-based worker UAV selection for load balancing in FANETs.
+
+
+
+
 %=========================================================
-\section{Problem Description}
+\section{System Model}
 
 \subsection{Problem Scenario}
 
 \subsection{System Architecture}
 
-\begin{figure}[H]
+\begin{figure*}[!t]
     \centering
-    %\includegraphics[width=0.85\columnwidth]{assets/system_architecture.png}
+    \includegraphics[
+        width=\textwidth,
+        height=0.38\textheight,
+        keepaspectratio,
+        trim=0.5cm 0.3cm 0.5cm 0.3cm,
+        clip
+    ]{assets/system_architecture_2.png}
     \caption{Proposed CTRL system architecture.}
     \label{fig:ctrl_architecture}
-\end{figure}
-
+\end{figure*}
 %% ============================================================
 
 \subsection{Network Topology}
@@ -315,7 +341,7 @@ candidate CH $i$ to member UAV $m$ is considered reachable
 only when
 \begin{equation}
 \label{eq:reachable}
-\mathrm{SINR}_{im}\geq\gamma_{\min}.
+\mathrm{SINR}_{im}\geq\gamma_{\min}
 \end{equation}
 
 
@@ -339,15 +365,21 @@ exponential time constant, and $q$~(Ah) the extracted
 charge—all from the IEC~61960 discharge test.  The true
 \emph{usable} energy remaining from charge state $q$ down
 to the hardware cutoff voltage $V_{\mathrm{cut}}$ is
-\begin{align}\label{eq:Eusable}
-  E_{i}^{\mathrm{usable}}(q)
-  &=\int_{q}^{Q}\!\bigl[V_{\mathrm{batt}}(q')-V_{\mathrm{cut}}\bigr]\,dq'
-  \nonumber\\
-  &=(E_{0}-V_{\mathrm{cut}})(Q-q)
-    -KQ\ln\!\frac{Q}{Q-q}
-    +\frac{A}{B}\!\left(1-e^{-B(Q-q)}\right)
-\end{align}
-The normalised usable energy gives energy health:
+
+\begin{equation}
+\label{eq:Eusable}
+\begin{aligned}
+E_{i}^{\mathrm{usable}}(q)
+&= \int_{q}^{Q}\!\bigl[V_{\mathrm{batt}}(q')-V_{\mathrm{cut}}\bigr]\,dq' \\
+&= (E_{0}-V_{\mathrm{cut}})(Q-q)
+ -KQ\ln\!\left(\frac{Q}{Q-q}\right)
+ \\ \nonumber &\quad
+ +\frac{A}{B}\!\left(1-e^{-B(Q-q)}\right).
+\end{aligned}
+\end{equation}
+
+
+The normalized usable energy gives energy health:
 \begin{equation}
 \label{eq:hE_exact}
   h_{i}^{E,\mathrm{exact}}(q)
@@ -373,7 +405,7 @@ yields the implicit optimality condition
 \end{equation}
 \begin{equation}\label{eq:hE}
   h_{i}^{E}=1-\exp\!\left(-\alpha_E
-  \frac{E_{i}^{\mathrm{res}}}{E_{i}^{\max}}\right).
+  \frac{E_{i}^{\mathrm{res}}}{E_{i}^{\max}}\right)
 \end{equation}
 \subsubsection{Thermal health $h_{i}^{T}$}
 The onboard thermal sensor provides the current CPU temperature $T_{i}^{\mathrm{curr}}$ (K).since increase in temperature can influence performance throttling ,thermal health is obtained by normalizing $T_{i}^{\mathrm{curr}}$ and $T_{i}^{\min}$ and the maximum acceptable temperature $T_{i}^{\max}$ given by
@@ -384,7 +416,7 @@ The onboard thermal sensor provides the current CPU temperature $T_{i}^{\mathrm{
 \end{equation}
 The CPU frequency of UAV i after inspecting thermal throttling is obtained by:
 \begin{equation}\label{eq:fres}
-  f_{i}^{\mathrm{res}}=f_{i}^{\max}\cdot h_{i}^{T}
+  f_{i}^{\mathrm{res}}=f_{i}^{\max} h_{i}^{T}
 \end{equation}
 This establishes a one-way dependency from the current temperature to the thermal health and then to the residual CPU frequency, expressed as
 \[T_i^{\mathrm{curr}} \rightarrow h_i^T \rightarrow f_i^{\mathrm{res}}\]
@@ -535,7 +567,7 @@ Three cases arise:
 All factors are set to zero; \eqref{eq:stationarity} simplifies to
 condition for the equilibrium expressed analytically as
 \begin{equation}\label{eq:caseA}
-  H_{i}\cdot
+  H_{i}
   \frac{\partial\,\mathbb{E}[C_{i}]}{\partial p_{i}}
   \Bigg|_{p_{i}^{*}}
   =\frac{1-H_{i}}{E_i^{\mathrm{res}}}
@@ -585,7 +617,7 @@ is linear in $p_i$, and therefore its second derivative equals to zero. The expo
 =
 \left(\frac{A_{im}}{p_i^2}\right)
 \left(\frac{A_{im}}{p_i^2}-\frac{2}{p_i}\right)
-\exp\left(-\frac{A_{im}}{p_i}\right).
+\exp\left(-\frac{A_{im}}{p_i}\right)
 \]
 The value becomes negative   when  $p_i>A_{im}/2$,which relates to the realistic working range at which the probability of coverage is high. Furthermore,the log concavity is connected with the exponential elements helps to preserve the concaveness of the multiplicative character of coverage probability.Thus
 \[
@@ -655,7 +687,7 @@ In cluster $k$,$N_k$ represents the number of UAVs,$\rho_k$ is cluster size,$\et
 Before the first iteration, UAV~$i$ sets its initial
 broadcast power without knowledge of $\mathbf{p}_{-i}$:
 \begin{equation}\label{eq:p0}
-  p_{i}^{(0)}=H_{i}\cdot\frac{E_{i}^{\mathrm{res}}}{\Delta t}
+  p_{i}^{(0)}=H_{i}\frac{E_{i}^{\mathrm{res}}}{\Delta t}
 \end{equation}
 \textbf{Justification:} From energy conservation,
 $E_{i}^{\mathrm{res}}/\Delta t$ is the maximum sustainable
@@ -672,13 +704,13 @@ Convergence to $\varepsilon$-accuracy requires
 \begin{equation}
 \label{eq:Tconv}
   T_{\mathrm{conv}}
-  =\left\lceil\frac{\log\varepsilon}{\log\kappa}\right\rceil.
+  =\left\lceil\frac{\log\varepsilon}{\log\kappa}\right\rceil
 \end{equation}
 iterations.  For $\kappa=0.5$ and $\varepsilon=10^{-3}$:
 $T_{\mathrm{conv}}=10$ iterations$\times\Delta t=2$\,ms
 $\Rightarrow20$\,ms total election time.
 
-\section{Algorithms}
+
 
 \begin{algorithm}[t]
 \caption{CH Election Game}
@@ -762,7 +794,7 @@ first, a feasible neighboring cluster is selected; then, a worker UAV is
 selected inside that cluster.
 
 % ---------------------------------------------------------------
-\subsection{Saturation Condition and Help-Request Beacon}
+\subsection{Trust Evaluation}
 
 Let
 \begin{equation}
@@ -781,7 +813,7 @@ Help-Request Beacon (HRB):
   \mathrm{HRB}_{k}=
   \bigl\{\mathrm{ID}_{k},\,\tau^{\mathrm{req}},\,
          \delta_{\max},\,E_{\mathrm{task}},\,
-         \bar{q}_{k}\bigr\} .
+         \bar{q}_{k}\bigr\} 
   \label{eq:hrb}
 \end{equation}
 Here, $\mathrm{ID}_{k}$ identifies the requesting cluster,
@@ -813,7 +845,7 @@ formulated as
   (j^{*},u^{*})=
   \arg\max_{\substack{j\in\mathcal{R}^{\mathrm{feas}}\\
                       u\in\mathcal{F}_{j}^{\mathrm{feas}}}}
-  \mathcal{U}(j,u),
+  \mathcal{U}(j,u)
   \label{eq:joint_opt}
 \end{equation}
 where $\mathcal{U}(j,u)$ is the joint load utility,
@@ -842,7 +874,7 @@ $\mathcal{C}_{j}$,is
 \begin{equation}
   W_{j}=\log_{2}\!\left(1+
         \frac{P_{0}g_{0}D_{kj}^{-\eta}}{\sigma^{2}+I}\right)
-        \in\bigl(0,\log_{2}(1+\mathrm{SNR}_{\max})\bigr),
+        \in\bigl(0,\log_{2}(1+\mathrm{SNR}_{\max})\bigr)
   \label{eq:rate}
 \end{equation}
 where $P_{0}$ is the inter-cluster pilot power, $g_{0}$ is the reference
@@ -856,8 +888,8 @@ $\mathcal{C}_{j}$.Slots variation show by Exponential Moving Average (EMA)
 \cite{ref14}:
 \begin{equation}
   \bar{\lambda}_{j}^{(t)}=
-  \beta\bar{\lambda}_{j}^{(t-1)}+(1-\beta)\lambda_{j}^{(t)},
-  \quad \beta\in(0,1).
+  \beta\bar{\lambda}_{j}^{(t-1)}+(1-\beta)\lambda_{j}^{(t)}
+  \quad \beta\in(0,1)
   \label{eq:ema}
 \end{equation}
 
@@ -866,14 +898,14 @@ $\mathcal{C}_{j}$.Slots variation show by Exponential Moving Average (EMA)
 The EMA in \eqref{eq:ema} is a first-order IIR filter whose $z$-domain
 transfer function is
 \begin{equation}
-  H(z)=\frac{1-\beta}{1-\beta z^{-1}} .
+  H(z)=\frac{1-\beta}{1-\beta z^{-1}} 
   \label{eq:iir}
 \end{equation}
 Its time constant is $\tau_{\mathrm{IIR}}=-\Delta t/\ln\beta$. Setting
 $\tau_{\mathrm{IIR}}=T_{c}$, so that the load estimate tracks load changes
 on the same timescale as the channel coherence time, gives
 \begin{equation}
-  \beta=e^{-\Delta t/T_{c}} .
+  \beta=e^{-\Delta t/T_{c}} 
   \label{eq:beta}
 \end{equation}
 \end{proposition}
@@ -892,7 +924,7 @@ time. Imposing $\tau_{\mathrm{IIR}}=T_{c}$ and solving for $\beta$ yields
 
 The maximum processing rate of $\mathcal{C}_{j}$ is
 \begin{equation}
-  \lambda_{j}^{\max}=\frac{\phi_{j}\bar{f}_{j}}{\tau^{\mathrm{avg}}},
+  \lambda_{j}^{\max}=\frac{\phi_{j}\bar{f}_{j}}{\tau^{\mathrm{avg}}}
   \label{eq:lambda_max}
 \end{equation}
 where $\phi_{j}=|\mathcal{F}_{j}|$ is the number of free UAVs,
@@ -901,11 +933,11 @@ where $\phi_{j}=|\mathcal{F}_{j}|$ is the number of free UAVs,
   \sum_{u\in\mathcal{F}_{j}}f_{u}^{\mathrm{res}}
 \end{equation}
 is the average task size in CPU cycles, and $\tau^{\mathrm{avg}}$ is the
-mean residual CPU frequency \cite{ref13,ref16}. The load
+mean residual CPU frequency \cite{chen2023drl,wang2023joint}. The load
 margin is defined as
 \begin{equation}
-  \rho_{j}=1-\frac{\bar{\lambda}_{j}}{\lambda_{j}^{\max}},
-  \quad \rho_{j}\in[0,1].
+  \rho_{j}=1-\frac{\bar{\lambda}_{j}}{\lambda_{j}^{\max}}
+  \quad \rho_{j}\in[0,1]
   \label{eq:load_margin}
 \end{equation}
 
@@ -915,7 +947,7 @@ margin is defined as
 The utility of candidate cluster $\mathcal{C}_{j}$ is
 \begin{equation}
   U_{j}=\frac{W_{j}Q_{j}}{D_{kj}\Gamma_{j}}
-         \bigl(1-e^{-\mu_{j}\phi_{j}}\bigr)\rho_{j},
+         \bigl(1-e^{-\mu_{j}\phi_{j}}\bigr)\rho_{j}
   \label{eq:cluster_utility}
 \end{equation}
 where $Q_{j}\in[0,1]$ is the historical task-completion rate,
@@ -929,7 +961,7 @@ factor saturates.
 The saturation coefficient $\mu_{j}$ in \eqref{eq:cluster_utility}
 satisfies
 \begin{equation}
-  \mu_{j}=-\frac{\ln\varepsilon}{n_{j}^{\mathrm{total}}},
+  \mu_{j}=-\frac{\ln\varepsilon}{n_{j}^{\mathrm{total}}}
   \label{eq:mu}
 \end{equation}
 where $\varepsilon\in(0,1)$ is a prescribed saturation margin.
@@ -939,13 +971,13 @@ where $\varepsilon\in(0,1)$ is a prescribed saturation margin.
 Require the availability factor to reach $1-\varepsilon$ when the cluster
 is at maximum availability, i.e., $\phi_{j}=n_{j}^{\mathrm{total}}$:
 \[
-  1-e^{-\mu_{j}n_{j}^{\mathrm{total}}}=1-\varepsilon .
+  1-e^{-\mu_{j}n_{j}^{\mathrm{total}}}=1-\varepsilon 
 \]
 Solving for $\mu_{j}$ gives
 \[
   e^{-\mu_{j}n_{j}^{\mathrm{total}}}=\varepsilon
   \quad\Longrightarrow\quad
-  \mu_{j}=-\frac{\ln\varepsilon}{n_{j}^{\mathrm{total}}} .
+  \mu_{j}=-\frac{\ln\varepsilon}{n_{j}^{\mathrm{total}}} 
 \]
 Since $\varepsilon<1$ implies $-\ln\varepsilon>0$ and
 $n_{j}^{\mathrm{total}}>0$, we have $\mu_{j}>0$. Moreover, $\mu_{j}$ is
@@ -954,26 +986,24 @@ clusters saturate faster, which reflects their reduced scheduling
 flexibility.
 
 
-\end{IEEEproof}
-
 \paragraph{Feasibility Constraints}
 The feasible set $\mathcal{R}^{\mathrm{feas}}$ is defined by four
 constraints derived directly from the HRB in \eqref{eq:hrb}:
 \begin{align}
   \text{C1:}&\quad D_{kj}\leq D_{\max}
-               \quad\text{(communication range)},
+               \quad\text{(communication range)}
                \label{eq:C1}\\
   \text{C2:}&\quad \phi_{j}\geq1
-               \quad\text{(at least one free UAV)},
+               \quad\text{(at least one free UAV)}
                \label{eq:C2}\\
   \text{C3:}&\quad
     \frac{\tau^{\mathrm{req}}}{f_{j}^{\mathrm{total}}}+
     \frac{\tau^{\mathrm{req}}\ell_{\mathrm{bit}}}{r_{kj}}
     \leq\delta_{\max}
-               \quad\text{(deadline)},
+               \quad\text{(deadline)}
                \label{eq:C3}\\
   \text{C4:}&\quad E_{\mathrm{task}}\leq E_{j}^{\mathrm{res}}
-               \quad\text{(energy budget)},
+               \quad\text{(energy budget)}
                \label{eq:C4}
 \end{align}
 where
@@ -981,7 +1011,7 @@ where
   f_{j}^{\mathrm{total}}=\sum_{u\in\mathcal{F}_{j}}f_{u}^{\mathrm{res}},
   \qquad
   r_{kj}=B\log_{2}\!\left(1+
-  \frac{P_{0}g_{0}D_{kj}^{-\eta}}{\sigma^{2}}\right),
+  \frac{P_{0}g_{0}D_{kj}^{-\eta}}{\sigma^{2}}\right)
 \end{equation}
 $\ell_{\mathrm{bit}}$ is the data density in bits/cycle, and $B$ is the
 bandwidth \cite{ref15,ref16}.
@@ -990,7 +1020,7 @@ bandwidth \cite{ref15,ref16}.
 \label{prop:Dmax}
 The maximum inter-cluster communication range is
 \begin{equation}
-  D_{\max}=\left(\frac{P_{0}g_{0}}{P_{\mathrm{th}}}\right)^{1/\eta},
+  D_{\max}=\left(\frac{P_{0}g_{0}}{P_{\mathrm{th}}}\right)^{1/\eta}
   \label{eq:Dmax}
 \end{equation}
 where $P_{\mathrm{th}}$ is the receiver sensitivity threshold.
@@ -999,12 +1029,12 @@ where $P_{\mathrm{th}}$ is the receiver sensitivity threshold.
 \begin{IEEEproof}
 when the received power crosses the receiver sensitivity threshold,communication is possible
 \[
-  P_{0}g_{0}D_{kj}^{-\eta}\geq P_{\mathrm{th}} .
+  P_{0}g_{0}D_{kj}^{-\eta}\geq P_{\mathrm{th}} 
 \]
 Solving for $D_{kj}$ gives
 \[
   D_{kj}\leq\left(\frac{P_{0}g_{0}}{P_{\mathrm{th}}}\right)^{1/\eta}
-  =D_{\max} .
+  =D_{\max} 
 \]
 \end{IEEEproof}
 
@@ -1014,7 +1044,7 @@ $\phi_{j}$, $\rho_{j}$, and $E_{j}^{\mathrm{res}}$ for each $j\in\mathcal{R}^{\m
 rather than continuous optimization variables.  
 The candidate set is divided into  feasible and infeasible subsets by constraints C1--C4, and only feasible candidates are ranked by$U_{j}$. Consequently, the ideal nearby cluster is
 \begin{equation}
-  j^{*}=\arg\max_{j\in\mathcal{R}^{\mathrm{feas}}}U_{j} .
+  j^{*}=\arg\max_{j\in\mathcal{R}^{\mathrm{feas}}}U_{j} 
   \label{eq:cluster_sel}
 \end{equation}
 Since \eqref{eq:cluster_sel} is a finite discrete search, no KKT Lagrangian
@@ -1076,7 +1106,7 @@ Assume that, despite the fact that the true state cannot fulfill C3 or C4, clust
 The historical completion rate is updated if the incorrect report results in task failure as
 \begin{equation}
   Q_{j}^{(t+1)}=\alpha_{Q}Q_{j}^{(t)},
-  \quad \alpha_{Q}\in(0,1).
+  \quad \alpha_{Q}\in(0,1)
   \label{eq:Q_update}
 \end{equation}
 Since $U_{j}$ is proportional to $Q_{j}$ in \eqref{eq:cluster_utility}, the
@@ -1084,7 +1114,7 @@ per-slot utility loss after the penalty is
 \begin{equation}
   \Delta U_{j}=(1-\alpha_{Q})Q_{j}^{(t)}
   \frac{W_{j}}{D_{kj}\Gamma_{j}}
-  C(\phi_{j})\rho_{j}.
+  C(\phi_{j})\rho_{j}
   \label{eq:delta_U}
 \end{equation}
 For any selected feasible cluster with $Q_{j}^{(t)}>0$, $\rho_{j}>0$, and
@@ -1095,46 +1125,68 @@ $C(\phi_{j})>0$, we have $\Delta U_{j}>0$.
 The discounted future cost of the reputation loss is
 \begin{equation}
   \sum_{s=1}^{\infty}\delta^{s}\Delta U_{j}
-  =\frac{\delta}{1-\delta}\Delta U_{j}.
+  =\frac{\delta}{1-\delta}\Delta U_{j}
   \label{eq:future_penalty}
 \end{equation}
 A deviation is unprofitable whenever
 \begin{equation}
   \frac{\delta}{1-\delta}\Delta U_{j}\geq\Delta^{+},
   \quad\text{equivalently}\quad
-  \delta\geq\frac{\Delta^{+}}{\Delta^{+}+\Delta U_{j}}.
+  \delta\geq\frac{\Delta^{+}}{\Delta^{+}+\Delta U_{j}}
   \label{eq:delta_condition}
 \end{equation}
-Thus, for any discount factor satisfying \eqref{eq:delta_condition}, the
-long-run reputation loss dominates the bounded short-run gain from
-misreporting. Therefore, truthful reporting is incentive-compatible in the
-repeated neighboring-cluster selection game under the stated reputation
-penalty mechanism.
+
+Therefore,the bounded short term advantage from misreporting is outweighed by the long term reputation loss for every discount factor that satisfies \eqref{eq:delta_condition}. Consequently, under the specified reputation penalty mechanism,truthful reporting is incentive compatible in the repeated neighboring cluster selection game.
+
 \end{IEEEproof}
+\begin{algorithm}[t]
+\caption{Post-Election Cooperative Task Offloading}
+\label{alg:offloading}
+\begin{algorithmic}[1]
+\Require $i^{\star}$, $\mathbf{p}^{\star}$, $\{H_i\}_{i\in\mathcal{C}_k}$, $\{b_i\}_{i\in\mathcal{C}_k}$, $\bar{q}_k$, $\tau^{\mathrm{req}}$, $\delta_{\max}$, $E_{\mathrm{task}}$, neighboring clusters $\{\mathcal{C}_j\}_{j\in\mathcal{N}(k)}$
+\Ensure Selected cluster $j^{\star}$, selected worker UAV $u^{\star}$
+\State Compute $\mathcal{F}_k(t)$ from occupancy status
+\If{$\mathcal{F}_k(t)\neq\emptyset$} \Return \emph{(no offloading needed)} \EndIf
+\State Build HRB$_k=\{\mathrm{ID}_k,\tau^{\mathrm{req}},\delta_{\max},E_{\mathrm{task}},\bar{q}_k\}$; $i^{\star}$ broadcasts to neighbors
+\State $\mathcal{R}^{\mathrm{feas}} \gets \emptyset$
+\For{each $\mathcal{C}_j \in \{\mathcal{C}_j\}_{j\in\mathcal{N}(k)}$}
+    \State Compute $D_{kj}$, $D_{\max}$; \textbf{if} $D_{kj}>D_{\max}$ \textbf{continue} \Comment{C1}
+    \State Compute $\phi_j=|\mathcal{F}_j|$; \textbf{if} $\phi_j<1$ \textbf{continue} \Comment{C2}
+    \State Compute $r_{kj}$, $f_j^{\mathrm{total}}$, delay budget; \textbf{if} $>\delta_{\max}$ \textbf{continue} \Comment{C3}
+    \State Query $E_j^{\mathrm{res}}$; \textbf{if} $E_{\mathrm{task}}>E_j^{\mathrm{res}}$ \textbf{continue} \Comment{C4}
+    \State $\mathcal{R}^{\mathrm{feas}} \gets \mathcal{R}^{\mathrm{feas}} \cup \{j\}$ \Comment{passes C1--C4}
+\EndFor
+\If{$\mathcal{R}^{\mathrm{feas}}=\emptyset$} \Return \emph{(no feasible cluster found)} \EndIf
+\For{each $j \in \mathcal{R}^{\mathrm{feas}}$}
+    \State Update $\bar{\lambda}_j^{(t)}$, $\lambda_j^{\max}$, $\rho_j$, $\mu_j$, $C(\phi_j)$, $W_j$
+    \State $U_j \gets \dfrac{W_jQ_j}{D_{kj}\Gamma_j}\,C(\phi_j)\,\rho_j$
+\EndFor
+\State $j^{\star} \gets \arg\max_{j\in\mathcal{R}^{\mathrm{feas}}} U_j$ \Comment{best neighboring cluster}
+\State $\mathcal{F}_{j^{\star}}^{\mathrm{feas}} \gets \emptyset$
+\For{each worker $u \in \mathcal{F}_{j^{\star}}$}
+    \State \textbf{if} $u$ satisfies task requirements: $\mathcal{F}_{j^{\star}}^{\mathrm{feas}} \gets \mathcal{F}_{j^{\star}}^{\mathrm{feas}} \cup \{u\}$
+\EndFor
+\State $u^{\star} \gets \arg\max_{u\in\mathcal{F}_{j^{\star}}^{\mathrm{feas}}} b_u$ \Comment{reuse cached election score}
+\State Forward task to $u^{\star}$ in $\mathcal{C}_{j^{\star}}$; update $Q_{j^{\star}}$ on outcome \Comment{reputation update}
+\State \Return $(j^{\star},u^{\star})$
+\end{algorithmic}
+\end{algorithm}
 
 
 %% ------------------------------------------------------------
-\subsection{Worker UAV Selection within \texorpdfstring{$\mathcal{C}_{j^{*}}$}{Cj*}}
+\subsection{Bargaining Game-Based Dynamic Score Transfer within \texorpdfstring{$\mathcal{C}_{j^{*}}$}{Cj*}}
 \label{sec:worker}
 %% ------------------------------------------------------------
 
-Upon winning the neighbor selection, $\mathrm{CH}_{j^{*}}$
-receives the full HRB tuple and forwards it to all free
-UAVs $u\in\mathcal{F}_{j^{*}}$.  The intra-cluster worker
-selection reuses the same health-index and Utility Score-score
-machinery that drove the election game.
+After winning the neighbor selection,all free UAVs $u\in\mathcal{F}_{j^{*}}$ recieve the whole HRB tuple from $\mathrm{CH}_{j^{*}}$.The identical Utility Score and health index algorithm used in the election process are also used in the intra cluster worker selection process.
 
 \subsubsection{Adjusted deadline}
 
-Let $T^{\mathrm{bc}}$ denote the HRB transmission timestamp obtained
-from the packet header. The elapsed time after HRB broadcast is therefore
+The HRB transmission timestamp derived from the packet header is represented by $T^{\mathrm{bc}}$.Thus the amount of time that has passed since the HRB broadcast is
 \[
-\Delta t_{\mathrm{bc}} = t_{\mathrm{now}} - T^{\mathrm{bc}} .
+\Delta t_{\mathrm{bc}} = t_{\mathrm{now}} - T^{\mathrm{bc}} 
 \]
-Further, $D_{kj^{*}}/c$ represents the inter-cluster propagation delay
-from the overloaded cluster $C_k$ to the selected neighbour cluster
-$C_{j^{*}}$. Hence, the remaining time budget available to worker UAV
-$u$ is
+Additionally, the inter cluster propagation delay from the overloaded cluster $C_k$ to the chosen neighbor cluster  $C_{j^{*}}$ is shown by $D_{kj^{*}}/c$.So worker UAV $u$'s remaining time budget is
 
 \begin{equation}\label{eq:intra_deadline}
   \delta_{u}^{\mathrm{intra}}
@@ -1152,7 +1204,7 @@ required.
 \begin{equation}\label{eq:Ttotal}
   T_{u}^{\mathrm{total}}
   =\underbrace{\frac{\tau^{\mathrm{req}}}{f_{u}^{\mathrm{res}}}}_{\text{computation}}
-  +\underbrace{\frac{\tau^{\mathrm{req}}\cdot\ell^{\mathrm{bit}}}{r_{u,\mathrm{CH}}}}_{\text{intra-cluster tx}}
+  +\underbrace{\frac{\tau^{\mathrm{req}}\ell^{\mathrm{bit}}}{r_{u,\mathrm{CH}}}}_{\text{intra-cluster tx}}
   +\underbrace{\frac{d_{u}^{\mathrm{CH}}}{c}}_{\text{propagation}}
 \end{equation}
 
@@ -1166,44 +1218,23 @@ $d_{u}^{\mathrm{CH}}=\|\mathbf{q}_{u}-\bar{\mathbf{q}}_{j^{*}}\|_{2}$.
 
 \subsubsection{Worker Utility Score score}
 
-Drawing from the same design principles as the election
-Utility Score score \eqref{eq:Utility Score}---health-weighted benefit minus
-normalised cost---the worker Utility Score score is defined as
+Using the same design guidelines as the election Health-weighted benefit minus normalized cost is the Utility Score \eqref{eq:Utility Score}. The worker utility score is defined as
 
 \begin{equation}\label{eq:Psi}
   \Psi_{u}=
-  \frac{H_{u}\cdot R_{u}\cdot f_{u}^{\mathrm{res}}
-        \cdot\mathrm{QoS}_{u}}
-       {d_{u}^{\mathrm{CH}}\cdot\bar{v}_{u}
-        \cdot T_{u}^{\mathrm{total}}}.
+  \frac{H_{u} R_{u} f_{u}^{\mathrm{res}}
+        \mathrm{QoS}_{u}}
+       {d_{u}^{\mathrm{CH}}\bar{v}_{u}
+         T_{u}^{\mathrm{total}}}.
 \end{equation}
 
-where $R_{u}=\lambda_{R}R_{u}^{(t-1)}
-+(1-\lambda_{R})(1-\bar{\mathcal{L}}_{u})$ is the
-reputation score ($\lambda_{R}=0.8$);
-$\mathrm{QoS}_{u}=(1-p_{u}^{\mathrm{loss}})
-e^{-\alpha_{\ell}\ell_{u}}$ is the link-quality score
-with packet-loss probability $p_{u}^{\mathrm{loss}}$ and
-queuing latency $\ell_{u}$ (s); and
-$\bar{v}_{u}=(T_{\mathrm{hist}})^{-1}\sum_{t}
-\|\mathbf{q}_{u}^{(t+1)}-\mathbf{q}_{u}^{(t)}\|_{2}/\Delta t$
-is the time-averaged speed.
+where $\mathrm{QoS}_{u}=(1-p_{u}^{\mathrm{loss}})e^{-\alpha_{\ell}\ell_{u}}$ is the link-quality score with packet-loss probability $p_{u}^{\mathrm{loss}}$ and queuing latency $\ell_{u}$ (s); $\bar{v}_{u}=(T_{\mathrm{hist}})^{-1}\sum_{t} \|\mathbf{q}_{u}^{(t+1)}-\mathbf{q}_{u}^{(t)}\|_{2}/\Delta t$ is the time-averaged speed.
 
 \paragraph{Structural continuity with the election Utility Score
 score}
-Comparing \eqref{eq:Psi} with \eqref{eq:Utility Score}, both scores
-are weighted by $H_{u}$ and penalise resource expenditure.
-In \eqref{eq:Utility Score} the benefit is coverage fraction
-$\mathbb{E}[C_{i}]$ and the cost is normalised transmit
-power; in \eqref{eq:Psi} the benefit is computational
-throughput $f_{u}^{\mathrm{res}}\cdot R_{u}\cdot\mathrm{QoS}_{u}$
-and the cost is distance-speed exposure
-$d_{u}^{\mathrm{CH}}\cdot\bar{v}_{u}\cdot T_{u}^{\mathrm{total}}$.
-The health index $H_{u}$ governs Utility Score magnitude in both
-cases, ensuring that a depleted or throttled UAV
-contributes low Utility Scores to both the election and the
-offloading, unifying the self-exclusion mechanism across
-the entire framework.
+When comparing \eqref{eq:Psi} and \eqref{eq:Utility Score}, it can be seen that both scores penalize resource expenditure and are weighted by $H_{u}$.
+In \eqref{eq:Utility Score}, the cost is normalized transmit power and the benefit is coverage fraction $\mathbb{E}[C_{i}]$; in \eqref{eq:Psi}, the cost is distance-speed exposure $d_{u}^{\mathrm{CH}}\cdot\bar{v}_{u}\cdot T_{u}^{\mathrm{total}}$ and the benefit is computational throughput $f_{u}^{\mathrm{res}}\cdot R_{u}\cdot\mathrm{QoS}_{u}$.
+The health index $H_{u}$ influences Utility Score magnitude in both cases, guaranteeing that a depleted or throttled UAV contributes low Utility Scores to both the election and the offloading, integrating the self-exclusion mechanism across the entire framework.
 
 \begin{proposition}[Superlinearity of $\Psi_{u}$ in
 $f_{u}^{\mathrm{res}}$]\label{prop:super}
@@ -1217,23 +1248,7 @@ In both regimes, higher residual compute is strictly
 preferred.
 \end{proposition}
 \begin{proof}
-In the transmission-dominated regime,
-$T_{u}^{\mathrm{total}}\approx
-\tau^{\mathrm{req}}\ell^{\mathrm{bit}}/r_{u,\mathrm{CH}}$
-is independent of $f_{u}^{\mathrm{res}}$, so the
-numerator of \eqref{eq:Psi} contributes one factor of
-$f_{u}^{\mathrm{res}}$ and the denominator is constant,
-giving $\Psi_{u}\propto f_{u}^{\mathrm{res}}$.  Wait: in
-this regime the denominator is constant w.r.t.\
-$f_{u}^{\mathrm{res}}$ but the thermal health $h_{u}^{T}$
-in $f_{u}^{\mathrm{res}}=f_{u}^{\max}h_{u}^{T}$ scales
-the rate $r_{u,\mathrm{CH}}$ through
-$f_{u}^{\mathrm{res}}$ itself (via the QoS term), so
-$\Psi_{u}\propto(f_{u}^{\mathrm{res}})^{2}$.  In the
-compute-dominated regime,
-$T_{u}^{\mathrm{total}}\approx\tau^{\mathrm{req}}/f_{u}^{\mathrm{res}}$,
-which cancels one power from the numerator, leaving
-$\Psi_{u}\propto f_{u}^{\mathrm{res}}$.
+In the transmission-dominated regime, $T_{u}^{\mathrm{total}}\approx\tau^{\mathrm{req}}\ell^{\mathrm{bit}}/r_{u,\mathrm{CH}}$ is independent of $f_{u}^{\mathrm{res}}$. Therefore, the denominator of \eqref{eq:Psi} is constant with respect to $f_{u}^{\mathrm{res}}$. However, the thermal health $h_{u}^{T}$ in $f_{u}^{\mathrm{res}}=f_{u}^{\max}h_{u}^{T}$ scales the rate $r_{u}^{\mathrm{CH}}$ through $f_{u}^{\mathrm{res}}$ itself (via the QoS term), so $\Psi_{u}\propto(f_{u}^{\mathrm{res}}$ itself.  $T_{u}^{\mathrm{total}}\approx\tau^{\mathrm{req}}/f_{u}^{\mathrm{res}}$ in the compute-dominated regime eliminates one power from the numerator, leaving $\Psi_{u}\propto f_{u}^{\mathrm{res}}$.
 \end{proof}
 
 \subsubsection{Nash Bargaining Formulation}
@@ -1285,7 +1300,7 @@ assigned; all others retain their threat points),
 \begin{equation}\label{eq:u_star}
   u^{*}
   =\argmax_{u\in\mathcal{F}_{j^{*}}^{\mathrm{feas}}}
-  \bigl(\Psi_{u}-\alpha_{0}H_{u}\bigr).
+  \bigl(\Psi_{u}-\alpha_{0}H_{u}\bigr)
 \end{equation}
 
 \subsubsection{Intra-cluster feasibility constraints}
@@ -1324,7 +1339,7 @@ first order:
 
 \begin{equation}\label{eq:ptc}
   P_{\mathrm{tc}}(H_{u},R_{u})
-  \approx H_{u}^{\alpha_{E}}\cdot R_{u}
+  \approx H_{u}^{\alpha_{E}} R_{u}
 \end{equation}
 
 where the exponent $\alpha_{E}=2.14$ is the LiPo
@@ -1364,7 +1379,7 @@ utility corresponding to \eqref{eq:joint_opt} is defined as
 
 \begin{equation}\label{eq:joint_utility}
   \mathcal{U}(j,u)
-  =U_{j}\cdot\bigl(\Psi_{u}-\alpha_{0}H_{u}\bigr)
+  =U_{j}\bigl(\Psi_{u}-\alpha_{0}H_{u}\bigr)
 \end{equation}
 
 which is the product of the neighbor cluster's
@@ -1378,7 +1393,7 @@ $u$, \eqref{eq:joint_utility} separates as
 \begin{equation}\label{eq:separability}
   \max_{j,u}\mathcal{U}(j,u)
   =\max_{j\in\mathcal{R}_{\mathrm{feas}}}
-  \Bigl[U_{j}\cdot
+  \Bigl[U_{j}
   \max_{u\in\mathcal{F}_{j}^{\mathrm{feas}}}
   (\Psi_{u}-\alpha_{0}H_{u})\Bigr]
 \end{equation}
@@ -1430,31 +1445,27 @@ rule for the election game \eqref{eq:CH}.
 
 
 %=========================================================
-\section{Solution Approach}
 
-%=========================================================
-
-
-%=========================================================
-\section{Performance Evaluation}
+\section{Performance Analysis}
 \label{sec:eval}
 
 In this section we present comprehensive simulation results that
 validate the theoretical guarantees derived in
 Sections~\ref{sec:game}--\ref{sec:offload_theory} and benchmark
 CTRL against five widely adopted baselines and two state-of-the-art
-schemes from the literature.
+schemes from the literature.  All comparison figures use grouped bar
+charts to enable precise per-scheme reading at each operating point.
 
 %----------------------------------------------------------
 \subsection{Simulation Setup}
 \label{sec:setup}
 %----------------------------------------------------------
 
-We consider a FANET of $N \in \{8, 12, 16, 20, 24, 28, 32\}$ UAVs
-partitioned into $K = 4$ clusters at altitude $H = 100$\,m above the
-ground.  All Monte Carlo results are averaged over at least 50
-independent trials per operating point.  Table~\ref{tab:params}
-summarises the principal simulation parameters.
+We consider a FANET of $N \in \{8, 14, 20, 26, 32\}$ UAVs partitioned
+into $K = 4$ clusters at altitude $H = 100$\,m.  All Monte Carlo results
+are averaged over \textbf{100 independent trials} per operating point to
+ensure statistical stability.  Table~\ref{tab:params} summarises the
+principal simulation parameters.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.25}
@@ -1465,22 +1476,23 @@ summarises the principal simulation parameters.
 \toprule
 \textbf{Parameter} & \textbf{Symbol} & \textbf{Value} \\
 \midrule
-Number of UAVs           & $N$          & 8 -- 32         \\
-Number of clusters       & $K$          & 4               \\
-UAV altitude             & $H$          & 100 m           \\
-Path-loss exponent       & $\eta$       & 2.2             \\
-Noise power              & $\sigma^2$   & $10^{-7}$ W     \\
-Max hardware power       & $P_{\max}$   & 20 mW           \\
-Battery capacity         & $E_{\max}$   & 0.15 J/slot     \\
-LiPo coefficient         & $\alpha_E$   & 2.14            \\
-SINR threshold           & $\gamma_{\min}$ & $-6$ dB      \\
-Control channel BW       & $B_c$        & 80 kHz          \\
-Channel coherence time   & $T_c$        & 1.49 ms         \\
-Time slot duration       & $\Delta t$   & 1.34 ms         \\
-EMA smoothing factor     & $\beta$      & 0.407           \\
-AHP weights $(w_E,w_T,w_L)$ &          & (0.5, 0.25, 0.25) \\
-CPU frequency range      & $f$          & 0.5 -- 2.0 GHz  \\
-UAV temperature range    & $T$          & 293 -- 348 K    \\
+Number of UAVs           & $N$          & 8, 14, 20, 26, 32   \\
+Number of clusters       & $K$          & 4                   \\
+Monte Carlo trials       & ---          & 100 per point       \\
+UAV altitude             & $H$          & 100 m               \\
+Path-loss exponent       & $\eta$       & 2.2                 \\
+Noise power              & $\sigma^2$   & $10^{-7}$ W         \\
+Max hardware power       & $P_{\max}$   & 20 mW               \\
+Battery capacity         & $E_{\max}$   & 0.15 J/slot         \\
+LiPo coefficient         & $\alpha_E$   & 2.14                \\
+SINR threshold           & $\gamma_{\min}$ & $-6$ dB          \\
+Control channel BW       & $B_c$        & 80 kHz              \\
+Channel coherence time   & $T_c$        & 1.49 ms             \\
+Time slot duration       & $\Delta t$   & 1.34 ms             \\
+EMA smoothing factor     & $\beta$      & 0.407               \\
+AHP weights $(w_E,w_T,w_L)$ &          & (0.5, 0.25, 0.25)   \\
+CPU frequency range      & $f$          & 0.5--2.0 GHz        \\
+UAV temperature range    & $T$          & 293--348 K          \\
 Task CPU demand          & $\tau$       & $5\times10^7$ cycles \\
 \bottomrule
 \end{tabular}
@@ -1488,299 +1500,275 @@ Task CPU demand          & $\tau$       & $5\times10^7$ cycles \\
 
 \smallskip
 \noindent\textbf{Comparison schemes.}
-We compare CTRL against the following eight schemes:
+We benchmark CTRL against six schemes:
 
 \begin{itemize}
-  \item \textbf{DRL-based}~\cite{ref1}: A multi-agent deep
-        reinforcement learning scheme that selects the CH and
-        offloading target via an $\varepsilon$-greedy Q-network
-        ($\varepsilon = 0.15$).  The policy is trained offline;
-        runtime decisions carry a 15--22\% delay overhead from
-        exploration and non-stationarity under UAV mobility.
-  \item \textbf{MCCCO}~\cite{ref2}: A multi-UAV cooperative
-        computation offloading scheme that elects the highest-energy
-        CH (no thermal or link-quality correction) and routes tasks
-        to the nearest available cluster via greedy assignment.
-  \item \textbf{Energy-best CH}: Always selects the UAV with maximum
-        residual energy as CH, ignoring thermal throttling and link health.
+  \item \textbf{DRL-based}~\cite{ref1}: An $\varepsilon$-greedy
+        Q-network ($\varepsilon=0.15$) that selects CH and offloading
+        target via offline-trained policy.  Runtime overhead arises from
+        exploration noise and non-stationarity under UAV mobility.
+  \item \textbf{MCCCO}~\cite{ref2}: Highest-energy CH election
+        (no thermal or link-quality correction) with greedy
+        nearest-cluster task routing.
+  \item \textbf{Energy-best CH}: Maximum residual energy CH,
+        ignoring thermal throttling and link health.
   \item \textbf{LEACH-style}: Probabilistic CH election with
         probability proportional to residual energy~\cite{ref4}.
   \item \textbf{Random CH}: Uniform random CH selection (lower bound).
-  \item \textbf{No offloading}: Tasks are processed locally with no
-        inter-cluster load migration.
-  \item \textbf{Round-robin}: Tasks are divided equally across
-        clusters regardless of current load or capacity.
-  \item \textbf{Nearest-cluster}: Overflow is forwarded greedily to
-        the geographically adjacent cluster.
+  \item \textbf{No offloading / Round-robin / Nearest-cluster}: Three
+        redistribution baselines used in load-balancing comparisons.
 \end{itemize}
 
 %----------------------------------------------------------
-\subsection{Task Delay and Energy Consumption}
-\label{sec:res_delay}
+\subsection{Results and Discussion}
+\label{sec:res}
 %----------------------------------------------------------
 
-Fig.~\ref{fig:delay_energy} plots the average task completion delay
-and normalised CH energy cost as the network size grows from $N=8$ to
-$N=32$.  CTRL achieves the lowest delay at every operating point
-because the Nash Equilibrium CH election (Theorem~1) selects the UAV
-whose composite health $H_i$ and residual energy jointly maximise the
-expected coverage probability $\mathbb{E}[C_i]$, yielding the highest
-thermally-corrected CPU frequency $f_{\mathrm{eff}} = f \cdot h_T$.
-At $N = 20$, CTRL reduces average delay by \textbf{32\%} over the
-DRL scheme~\cite{ref1} and \textbf{41\%} over MCCCO~\cite{ref2}.
-The DRL penalty stems from its $\varepsilon$-greedy exploration (15\%
-random elections) and the absence of a self-exclusion gate, which
-occasionally elects thermally-degraded CHs.  MCCCO's larger penalty
-arises from ignoring CPU thermal throttling: its energy-only CH
-overestimates available processing capacity, producing a compounding
-thermal-miss delay term $\Delta\tau_{\text{thermal}} =
-\tau_{\text{req}} \cdot (1 - h_T) \cdot 0.35$.
-The energy panel confirms that CTRL also consumes the least CH energy:
-healthy CHs process tasks in fewer cycles, and the self-exclusion
-Theorem~2 prevents near-depleted UAVs from incurring the full CH
-energy drain.
+\subsubsection{Task Delay and Energy Cost vs. Network Size}
+
+Fig.~\ref{fig:delay_energy} presents grouped bar charts of average task
+completion delay and normalised CH energy cost for five network sizes
+($N \in \{8, 14, 20, 26, 32\}$, 100 trials per bar, six bars per group).
+CTRL achieves the shortest bar at every operating point in both panels.
+The delay advantage stems from the Nash Equilibrium CH election
+(Theorem~1): the elected UAV maximises the thermally-corrected
+frequency $f_{\mathrm{eff}} = f \cdot h_T$, whereas competing schemes
+elect CHs that are thermally throttled or near-depleted.
+
+At $N = 20$, CTRL reduces average task delay by \textbf{24\%} relative to
+DRL~\cite{ref1} and \textbf{30\%} relative to MCCCO~\cite{ref2}.
+The DRL bar is elevated by its $\varepsilon$-greedy exploration
+(15\% random elections) and the absence of a self-exclusion gate, which
+occasionally elects degraded CHs.  MCCCO's bar is the largest among the
+three primary schemes because ignoring thermal throttling causes an
+over-estimated CPU capacity: the resulting thermal-miss penalty is
+$\Delta\tau_{\text{th}} = \tau_{\text{req}} \cdot 0.35 \cdot (1 - h_T)$
+per task.  In the energy panel, CTRL's bar remains the shortest at all
+$N$ because: (i) healthy CHs complete tasks in fewer cycles, and (ii)
+the self-exclusion mechanism (Theorem~2) prevents near-depleted UAVs
+from incurring the full per-slot CH drain.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{fig6_delay_energy}
-  \caption{Average task completion delay (left) and normalised CH
-           energy cost (right) vs. number of UAVs $N$ for CTRL and
-           five competing schemes including DRL~\cite{ref1} and
-           MCCCO~\cite{ref2}. CTRL achieves the lowest delay and
-           energy at all operating points.}
+  \caption{Grouped bar chart: average task completion delay (left)
+           and normalised CH energy cost (right) at five network sizes
+           for CTRL and five competing schemes (100 Monte Carlo trials
+           per bar). CTRL achieves the shortest bars at all $N$,
+           confirming the KKT-optimal CH selection advantage.}
   \label{fig:delay_energy}
 \end{figure}
 
-%----------------------------------------------------------
-\subsection{Load Balancing and Throughput}
-\label{sec:res_load}
-%----------------------------------------------------------
+\subsubsection{Inter-Cluster Load Balancing Over Time}
 
-\subsubsection{Load Variance Under Dynamic Surges}
-
-Fig.~\ref{fig:load_balance} evaluates inter-cluster load balancing
-over 120 time slots with two deliberate load surges injected at $t=40$
-and $t=75$.  CTRL's iterative utility-based redistribution (Algorithm~2)
-drives load variance to near-zero within 2--3 slots of each surge.
-DRL~\cite{ref1} exhibits a 2-slot detection lag because its
-Q-network operates on stale load observations ($\alpha_{\text{lag}}=0.5$),
-resulting in variance peaks \textbf{2.3$\times$} larger than CTRL at
-$t=42$.  MCCCO~\cite{ref2}'s nearest-cluster forwarding cascades
-overflow to adjacent nodes, producing a secondary variance spike before
-eventual decay.  The cumulative throughput panel confirms that CTRL
-serves the most tasks over the 120-slot horizon, outpacing DRL by
+Fig.~\ref{fig:load_balance} evaluates load balancing over 120 time slots
+with two deliberate load surges at $t=40$ and $t=75$.  CTRL's
+iterative utility-based redistribution (Algorithm~2) drives load
+variance to near-zero within 2--3 slots of each surge.
+DRL~\cite{ref1} exhibits a 2-slot detection lag (stale Q-network
+observations), producing variance peaks \textbf{2.3$\times$} larger
+than CTRL at $t=42$.  MCCCO~\cite{ref2}'s nearest-cluster forwarding
+cascades overflow to adjacent nodes, causing a secondary spike before
+eventual decay.  The cumulative throughput panel confirms CTRL serves
+the most tasks over the 120-slot horizon, outpacing DRL by
 \textbf{6.8\%} and MCCCO by \textbf{11.4\%} at $t=120$.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{fig7_load_balance}
   \caption{Inter-cluster load variance (left) and cumulative task
-           throughput (right) over 120 time slots.  Two load surges
-           are injected at $t=40$ and $t=75$. CTRL suppresses
-           variance fastest and sustains the highest throughput.}
+           throughput (right) over 120 time slots with load surges
+           at $t=40$ and $t=75$. CTRL suppresses variance fastest
+           and sustains the highest throughput.}
   \label{fig:load_balance}
 \end{figure}
 
-\subsubsection{Throughput vs. Offered Load}
+\subsubsection{System Throughput vs. Offered Load}
 
-Fig.~\ref{fig:throughput} plots the average throughput as the task
-arrival rate $\lambda$ increases from 6 to 54 tasks per slot, with
-total system capacity fixed at $K \times C_{\max} = 40$ tasks/slot.
-Below saturation ($\lambda < 25$), all schemes track the ideal
-capacity line, since no cluster is overloaded.  Above saturation,
-differences emerge sharply: CTRL stays within \textbf{2.1\%} of the
-ideal capacity line at $\lambda = 50$ because the cluster utility
-$U_j = W_j Q_j / (D_{kj}\Gamma_j)$ routes tasks to the
-highest-capacity cluster before congestion collapses throughput.
-DRL saturates \textbf{4.8 tasks/slot} below CTRL at $\lambda=50$
-due to its detection lag; MCCCO's cascade forwarding saturates
-\textbf{7.2 tasks/slot} below CTRL.  No-offloading begins to saturate
-at $\lambda \approx 36$ (90\% of per-cluster capacity) and plateaus
-far below the other schemes.
+Fig.~\ref{fig:throughput} plots average throughput as the task arrival
+rate $\lambda$ rises from 6 to 54 tasks/slot (total capacity
+$K \times C_{\max} = 40$).  Below saturation ($\lambda < 25$), all
+schemes track the ideal line.  Above saturation, CTRL stays within
+\textbf{2.1\%} of the capacity line at $\lambda = 50$ because the
+cluster utility $U_j$ routes tasks to the highest-headroom cluster
+before congestion collapses throughput.  DRL saturates
+\textbf{4.8 tasks/slot} below CTRL; MCCCO's cascade forwarding
+saturates \textbf{7.2 tasks/slot} below CTRL.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{fig11_throughput}
-  \caption{Average system throughput vs. task arrival rate $\lambda$.
-           Total system capacity is $K \times C_{\max} = 40$
-           tasks/slot (dashed line). CTRL tracks the ideal line
-           closest under heavy overload.}
+  \caption{Average system throughput vs. task arrival rate $\lambda$
+           ($K \times C_{\max}=40$ tasks/slot, dashed ideal line).
+           CTRL tracks the capacity limit closest under heavy overload.}
   \label{fig:throughput}
 \end{figure}
 
-%----------------------------------------------------------
-\subsection{Task Delay Distribution}
-\label{sec:res_cdf}
-%----------------------------------------------------------
+\subsubsection{Delay Distribution and Tail Latency}
 
-Fig.~\ref{fig:delay_cdf} shows the empirical CDF and tail-latency
-statistics of per-task completion delay at $N = 20$ UAVs.  CTRL's
-CDF is the steepest, reflecting a tight delay distribution: the median
-delay is \textbf{34\,ms} and the 95th-percentile delay is \textbf{231\,ms}.
-DRL~\cite{ref1} incurs a \textbf{27\%} higher 95th-percentile
-(294\,ms), and MCCCO~\cite{ref2} incurs a \textbf{56\%} higher
-95th-percentile (361\,ms) because their suboptimal CH choices
-occasionally create severe thermal hot-spots where CPU throughput
-collapses.  Random CH has the heaviest tail (95th percentile $> 900$\,ms),
-confirming the indispensability of health-aware CH election for
-latency-sensitive FANET missions such as surveillance relay and
-search-and-rescue.
+Fig.~\ref{fig:delay_cdf} characterises the per-task completion delay
+distribution at $N = 20$ UAVs (3\,000 task samples) using two
+complementary bar charts.  The left panel shows a stacked percentile
+breakdown (P0--P25, P25--P50, P50--P75, P75--P95 segments) per scheme:
+CTRL's stack is the shortest because the bulk of its delay mass
+concentrates in the low-percentile bands.  The right panel directly
+compares median delay (P50, hatched bars) against 95th-percentile
+tail latency (P95, solid bars) for each scheme.
+
+CTRL achieves the lowest P95 at \textbf{231\,ms}.
+DRL~\cite{ref1} incurs a \textbf{26\%} higher P95 (291\,ms) and
+MCCCO~\cite{ref2} incurs a \textbf{49\%} higher P95 (344\,ms) because
+their suboptimal CH choices occasionally create thermal hot-spots
+where CPU throughput collapses.  Random CH has the heaviest tail
+(P95 $> 490$\,ms), confirming the indispensability of health-aware
+CH election for latency-sensitive FANET missions.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{fig12_delay_cdf}
-  \caption{Empirical CDF (left) and 95th-percentile/median delay bars
-           (right) for $N = 20$ UAVs. CTRL achieves the tightest
-           delay distribution and the lowest tail latency.}
+  \caption{Delay distribution at $N=20$ UAVs (3\,000 samples).
+           Left: stacked percentile breakdown (P0--P25 to P75--P95)
+           per scheme. Right: median (P50, hatched) and tail (P95,
+           solid) bars per scheme. CTRL achieves the shortest stack
+           and the lowest P95 tail latency.}
   \label{fig:delay_cdf}
 \end{figure}
 
-%----------------------------------------------------------
-\subsection{Worker UAV Selection}
-\label{sec:res_worker}
-%----------------------------------------------------------
+\subsubsection{Worker UAV Selection Performance}
 
-Fig.~\ref{fig:worker} evaluates the Nash Bargaining worker selection
-scheme (Section~\ref{sec:offload_theory}) as a function of task
-deadline $\delta_{\max}$.  CTRL consistently achieves the highest
-task completion rate at every deadline because the surplus function
-$\Psi_u - \alpha_0 H_u$ jointly captures CPU frequency, link
-reliability, QoS, mobility speed, and health---factors that
-single-metric baselines (Highest Health, Highest Energy) cannot
-balance simultaneously.  At $\delta_{\max} = 30$\,ms (the most
-stringent deadline tested), CTRL attains a \textbf{78\%} completion
-rate vs. \textbf{64\%} for Highest-Health and \textbf{61\%} for
-Random Worker selection.  The worker utility score panel confirms
-that CTRL consistently selects the highest-$\Psi_u$ feasible worker,
-validating the Nash Bargaining Solution as the Pareto-efficient
-outcome among feasible candidates.
+Fig.~\ref{fig:worker} presents grouped bar charts of task completion
+rate and average worker utility score $\Psi_u$ across five deadline
+values (10--55\,ms; 500 trials per bar).  At the tightest deadline
+tested ($\delta_{\max} = 28$\,ms), CTRL attains a \textbf{87\%}
+completion rate versus \textbf{71\%} for Highest-Health and
+\textbf{58\%} for Random Worker.  The advantage arises because the
+Nash surplus $\Psi_u - \alpha_0 H_u$ jointly encodes CPU frequency,
+link reliability, QoS, mobility speed, and health—factors that
+single-metric baselines cannot balance simultaneously.  The right-panel
+bars confirm CTRL selects the highest-$\Psi_u$ worker at every
+deadline, validating the Pareto efficiency of the Nash Bargaining
+Solution (Theorem~4).
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{fig8_worker}
-  \caption{Task completion rate (left) and average worker utility score
-           $\Psi_u$ (right) vs. task deadline $\delta_{\max}$.
-           CTRL's Nash Bargaining selection achieves the highest
-           completion rate at all deadlines.}
+  \caption{Grouped bar chart: task completion rate (left) and average
+           worker utility score $\Psi_u$ (right) at five deadline
+           values (500 trials per bar). CTRL's Nash Bargaining
+           selection achieves the highest completion rate at every
+           deadline, validating Pareto efficiency.}
   \label{fig:worker}
 \end{figure}
 
-%----------------------------------------------------------
-\subsection{CH Health Sustainability and Network Lifetime}
-\label{sec:res_health}
-%----------------------------------------------------------
+\subsubsection{CH Health Sustainability and Network Lifetime}
 
-Fig.~\ref{fig:ch_health} tracks the average elected CH health index
-$H_{\mathrm{CH}}$ and cumulative UAV energy depletions over 150 time
-slots across $K = 6$ clusters.  CTRL sustains $H_{\mathrm{CH}} \geq 0.70$
-throughout the simulation period.  This is a direct consequence of
-the self-exclusion gate $H_i \geq 0.10$ derived from
-Theorem~2: no degraded UAV can be elected CH, preserving the
-cluster's healthiest nodes for coordination duties.
-DRL~\cite{ref1} starts near CTRL but dips mid-lifetime as
-exploration-driven elections prematurely drain healthy UAVs, settling
-at $H_{\mathrm{CH}} \approx 0.57$ by slot 150.  Energy-only schemes
-(MCCCO, Energy-best CH) elect thermally throttled CHs that consume
-energy inefficiently, producing the fastest health decay.  The
-depletion panel shows CTRL accumulates the fewest total depletions
-(\textbf{34\%} fewer than DRL and \textbf{61\%} fewer than Random CH
-by slot 150), directly translating to longer mission endurance.
+Fig.~\ref{fig:ch_health} uses grouped bar charts to compare, at three
+snapshot slots ($t = 50$, $t = 100$, $t = 150$, $K = 6$ clusters),
+the average elected CH health index $H_{\mathrm{CH}}$ (left panel) and
+cumulative UAV energy depletions (right panel).
+
+In the left panel, CTRL's bars remain the tallest at every snapshot,
+sustaining $H_{\mathrm{CH}} \geq 0.60$ even at $t=150$.  This directly
+validates the self-exclusion gate (Theorem~2): no UAV with $H_i < 0.10$
+can be elected CH, preserving the healthiest nodes for coordination.
+DRL~\cite{ref1}'s bars are progressively shorter across snapshots
+as exploration-driven elections prematurely drain healthy UAVs.
+Energy-only schemes (MCCCO, Energy-best CH) show the steepest decline
+because thermally throttled CHs consume energy inefficiently.
+
+In the right panel, CTRL's depletion bars are the shortest at every
+snapshot: \textbf{34\%} fewer cumulative depletions than DRL and
+\textbf{61\%} fewer than Random CH by $t=150$, directly translating
+to longer mission endurance.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{fig13_ch_health}
-  \caption{Average elected CH health index $H_{\mathrm{CH}}$ (left)
-           and cumulative UAV energy depletions (right) over 150 time
-           slots. CTRL sustains the highest CH quality and the fewest
-           depletions, validating Theorem~2 (Self-Exclusion) in a
-           dynamic multi-slot setting.}
+  \caption{Grouped bar chart: average elected CH health $H_{\mathrm{CH}}$
+           (left) and cumulative UAV depletions (right) at snapshot
+           slots $t\in\{50,100,150\}$ for $K=6$ clusters.
+           CTRL sustains the highest CH health and fewest depletions,
+           validating Theorem~2 (Self-Exclusion) in a dynamic
+           multi-slot setting.}
   \label{fig:ch_health}
 \end{figure}
 
-%----------------------------------------------------------
-\subsection{Convergence Efficiency vs.\ DRL}
-\label{sec:res_conv}
-%----------------------------------------------------------
+\subsubsection{Convergence: CTRL vs. DRL Training}
 
 Fig.~\ref{fig:conv_drl} provides a direct convergence comparison.
 The left panel plots the normalised power-vector distance
-$\|\mathbf{p}^{(t)} - \mathbf{p}^*\|_2 / \|\mathbf{p}^*\|_2$ vs.
+$\|\mathbf{p}^{(t)}-\mathbf{p}^*\|_2/\|\mathbf{p}^*\|_2$ vs.
 best-response iteration for $N_k \in \{3, 6, 10\}$.  All cluster
-sizes converge below the NE threshold $10^{-3}$ within \textbf{3--5
-iterations}, consistent with the bound $T_{\mathrm{conv}} \leq
-\lceil \log\varepsilon / \log\kappa \rceil$ from Theorem~3.
-The right panel plots the normalised cumulative reward of the
-DRL~\cite{ref1} scheme during offline training for $N \in \{8, 20, 32\}$.
-DRL requires \textbf{50--200 training episodes} to converge, and its
-asymptotic reward (0.48--0.72) falls \textbf{18--45\%} below CTRL's
-analytical NE utility of 0.88 (dashed line).  Moreover, DRL's
-convergence degrades with network size ($N=32$ barely reaches
-reward 0.48), whereas CTRL's $T_{\mathrm{conv}}$ grows only sub-linearly
-with $N_k$ (controlled by $\kappa$).  This establishes a fundamental
-efficiency advantage of the game-theoretic approach in dynamic FANETs
-where re-training between missions is infeasible.
+sizes cross below the NE threshold $10^{-3}$ within \textbf{3--5
+iterations}, consistent with the bound
+$T_{\mathrm{conv}} \leq \lceil\log\varepsilon/\log\kappa\rceil$
+from Theorem~3.  The right panel shows normalised cumulative reward
+for DRL~\cite{ref1} during offline training ($N \in \{8, 20, 32\}$),
+with $\pm1\sigma$ confidence bands across 15 independent seeds.
+DRL requires \textbf{50--200 training episodes} to converge and
+saturates at reward 0.48--0.72, which is \textbf{18--45\%} below
+CTRL's analytical NE utility of 0.88 (dashed).  DRL convergence
+also degrades with network size ($N=32$ barely exceeds 0.48),
+whereas CTRL's $T_{\mathrm{conv}}$ grows only sub-linearly with
+$N_k$.  This establishes a fundamental efficiency advantage of the
+game-theoretic approach in dynamic FANETs where mission re-training
+is infeasible.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{fig14_convergence_drl}
-  \caption{Left: CTRL best-response convergence to Nash Equilibrium
-           in $<$5 iterations for all cluster sizes (Theorem~3).
-           Right: DRL~\cite{ref1} training requires 50--200 episodes
-           and saturates below CTRL's analytical NE utility (dashed).}
+  \caption{Left: CTRL best-response convergence to NE in $<5$
+           iterations (Theorem~3). Right: DRL~\cite{ref1} training
+           requires 50--200 episodes and saturates below CTRL's
+           analytical NE utility (dashed); shaded bands show
+           $\pm1\sigma$ over 15 independent seeds.}
   \label{fig:conv_drl}
 \end{figure}
 
-%----------------------------------------------------------
-\subsection{Robustness to UAV Mobility}
-\label{sec:res_robust}
-%----------------------------------------------------------
+\subsubsection{Robustness to UAV Mobility Speed}
 
-Fig.~\ref{fig:fairness} evaluates robustness as UAV maximum speed
-increases from 5 to 50\,m/s.  The link failure probability grows as
-$p_{\mathrm{fail}} = \min(0.02 + 0.012v, 0.50)$, modelling Doppler-
-induced packet loss and handoff failures.
+Fig.~\ref{fig:fairness} evaluates robustness via grouped bar charts at
+six mobility speeds (5--50\,m/s, 100 trials per bar).  Link failure
+probability grows as $p_{\mathrm{fail}}=\min(0.02+0.012v,\,0.50)$,
+modelling Doppler-induced packet loss.
 
-The left panel shows Jain's Fairness Index (JFI)
-of cluster loads under a fixed hotspot scenario (one cluster
-persistently receives $14 > C_{\max} = 9$ tasks/slot).  CTRL
-maintains JFI $\geq 0.97$ across all speeds because the EMA-tracked
-load $\bar{\lambda}_j^{(t)} = \beta\bar{\lambda}_j^{(t-1)} +
-(1-\beta)\lambda_j^{(t)}$ with $\beta = e^{-\Delta t / T_c}$ adapts
-to channel coherence time, preserving redistribution accuracy under
-Doppler.  DRL~\cite{ref1} degrades from JFI $= 0.92$ at
-$v = 5$\,m/s to $0.84$ at $v = 50$\,m/s due to policy drift.
-Energy-only schemes (MCCCO, Energy-best CH) never redistribute tasks
-between clusters, yielding a persistently low JFI $\approx 0.65$.
+The left panel (Jain's Fairness Index of cluster loads) shows CTRL
+maintaining JFI\,$\geq 0.95$ across all speeds under a fixed hotspot
+scenario (cluster 0 receives $14 > C_{\max}=9$ tasks/slot).  The
+channel-coherence-aware EMA ($\beta = e^{-\Delta t/T_c}$) preserves
+redistribution accuracy even as Doppler frequency increases, so CTRL's
+bars remain consistently tall.  DRL's bars degrade from JFI\,$\approx 0.91$
+at 5\,m/s to $0.85$ at 50\,m/s due to policy drift under high mobility.
+Energy-only schemes (MCCCO, Energy-best CH) never redistribute tasks,
+yielding short, flat bars at JFI\,$\approx 0.65$--$0.70$.
 
-The right panel plots network lifetime (slots to first UAV depletion).
-CTRL sustains the longest lifetime at all speeds because: (i)
-self-exclusion prevents over-draining healthy CHs, (ii) the
-health-weighted NE minimises per-slot CH energy draw, and (iii) the
-EMA maintains accurate load state even as channels degrade.
-At $v = 50$\,m/s, CTRL extends network lifetime by \textbf{32\%}
-over DRL and \textbf{38\%} over Random CH.
+The right panel (network lifetime: slots to first UAV depletion) shows
+CTRL's bars as the tallest at all speeds: at $v = 50$\,m/s, CTRL
+extends network lifetime by \textbf{30\%} over DRL and
+\textbf{36\%} over Random CH.  The advantage comes from three
+reinforcing mechanisms: (i) self-exclusion prevents over-draining
+healthy CHs; (ii) the health-weighted NE minimises per-slot CH energy
+draw; and (iii) accurate EMA load tracking reduces unnecessary
+re-elections under Doppler-degraded channels.
 
 \begin{figure}[!t]
   \centering
   \includegraphics[width=\columnwidth]{fig15_fairness_lifetime}
-  \caption{Jain's Fairness Index of cluster loads (left) and network
-           lifetime in slots to first UAV energy depletion (right)
-           vs. UAV maximum speed (5--50\,m/s). CTRL maintains near-
-           perfect fairness and the longest lifetime at all speeds.}
+  \caption{Grouped bar chart: Jain's Fairness Index of cluster loads
+           (left) and network lifetime in slots to first UAV depletion
+           (right) at six UAV speeds (5--50\,m/s; 100 trials per bar).
+           CTRL maintains the highest fairness and longest lifetime at
+           all speeds.}
   \label{fig:fairness}
 \end{figure}
 
-%----------------------------------------------------------
-\subsection{Summary of Gains}
-\label{sec:res_summary}
-%----------------------------------------------------------
-
-Table~\ref{tab:gains} summarises the quantitative gains of CTRL over
-the two state-of-the-art reference schemes at $N = 20$ UAVs.
+Table~\ref{tab:gains} consolidates the quantitative performance gains
+of CTRL over the two primary reference schemes at $N = 20$ UAVs,
+derived from the 100-trial simulation results presented above.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.25}
-\caption{CTRL Performance Gains at $N = 20$ UAVs}
+\caption{CTRL Performance Gains at $N = 20$ UAVs (100 Monte Carlo Trials)}
 \label{tab:gains}
 \centering
 \begin{tabular}{lccc}
@@ -1789,19 +1777,19 @@ the two state-of-the-art reference schemes at $N = 20$ UAVs.
                 & \textbf{vs.\ MCCCO}~\cite{ref2}
                 & \textbf{vs.\ Random CH} \\
 \midrule
-Avg.\ task delay        & $-32\%$  & $-41\%$  & $-78\%$ \\
-CH energy cost          & $-18\%$  & $-27\%$  & $-52\%$ \\
-95th-pctile delay       & $-27\%$  & $-56\%$  & $-74\%$ \\
-Throughput ($\lambda=50$) & $+12\%$& $+18\%$  & $+31\%$ \\
-JFI at 50 m/s           & $+15\%$  & $+49\%$  & $+51\%$ \\
-Network lifetime        & $+32\%$  & $+38\%$  & $+61\%$ \\
-BR iterations to NE     & \multicolumn{3}{c}{$< 5$ (vs.\ 50--200 DRL episodes)} \\
+Avg.\ task delay           & $-24\%$  & $-30\%$  & $-75\%$ \\
+CH energy cost             & $-18\%$  & $-26\%$  & $-52\%$ \\
+P95 tail latency           & $-26\%$  & $-49\%$  & $>-50\%$ \\
+Throughput ($\lambda=50$)  & $+12\%$  & $+18\%$  & $+31\%$ \\
+JFI at 50\,m/s             & $+12\%$  & $+44\%$  & $+47\%$ \\
+Network lifetime           & $+30\%$  & $+36\%$  & $+58\%$ \\
+Completion rate (28\,ms)   & $+22\%$  & ---      & $+50\%$ \\
+BR iterations to NE        & \multicolumn{3}{c}{$<5$ (vs.\ 50--200 DRL training episodes)} \\
 \bottomrule
 \end{tabular}
 \end{table}
-
 %=========================================================
-\section{Conclusion and Future Work}
+\section{Conclusion}
 
 % Your conclusion here
 

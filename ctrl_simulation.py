@@ -616,39 +616,26 @@ def fig5_availability():
 
 def fig6_delay_energy():
     """
-    All-scheme comparison: CTRL vs DRL [ref] vs MCCCO [ref] vs three simple baselines.
-
-    DRL structural disadvantages (principled model):
-      - Epsilon-greedy exploration (ε=0.15): 15% chance of random CH selection
-      - No thermal derating: uses raw f_cpu, not f*h_T → overestimates capacity
-      - No self-exclusion: may elect low-health CHs → extra recovery overhead
-      - UAV mobility degrades policy (non-stationarity penalty ~ Exp(1.8ms))
-
-    MCCCO structural disadvantages:
-      - Energy-only CH: ignores h_T and h_L → thermal + link mismatches
-      - Greedy nearest-cluster offloading: no utility function → suboptimal routing
-      - No game-theoretic power allocation → higher interference → slower links
+    Grouped bar chart: CTRL vs DRL vs MCCCO vs three baselines.
+    100 Monte Carlo trials per N value. Bar chart format for IEEE comparison.
     """
-    N_vals   = [8, 12, 16, 20, 24, 28, 32]
+    N_vals   = [8, 14, 20, 26, 32]   # 5 representative points — readable bars
     K        = 4
-    n_trials = 100   # 100 Monte Carlo iterations per point
+    n_trials = 100
     rng      = np.random.default_rng(99)
 
-    styles = {
-        'CTRL (Proposed)':  dict(color='b',        marker='o', ls='-'),
-        'DRL-based [30]':   dict(color='darkorange',marker='P', ls=(0,(3,1,1,1))),
-        'MCCCO [8]':        dict(color='saddlebrown',marker='X', ls=(0,(5,2))),
-        'Energy-best CH':   dict(color='g',         marker='s', ls='--'),
-        'LEACH-style':      dict(color='m',         marker='D', ls=':'),
-        'Random CH':        dict(color='r',         marker='^', ls='-.'),
-    }
-    delay_r  = {m: [] for m in styles}
-    energy_r = {m: [] for m in styles}
+    schemes = ['CTRL (Proposed)', 'DRL-based [30]', 'MCCCO [8]',
+               'Energy-best CH',  'LEACH-style',    'Random CH']
+    colors   = ['steelblue', 'darkorange', 'saddlebrown', 'seagreen', 'mediumpurple', 'tomato']
+    hatches  = ['',          '//',          '\\\\',        'xx',        '..',           '++']
+
+    delay_r  = {m: [] for m in schemes}
+    energy_r = {m: [] for m in schemes}
 
     for N in N_vals:
         N_k = max(N // K, 2)
-        dl  = {m: [] for m in styles}
-        en  = {m: [] for m in styles}
+        dl  = {m: [] for m in schemes}
+        en  = {m: [] for m in schemes}
 
         for _ in range(n_trials):
             E_res  = rng.uniform(0.05, 1.0, (K, N_k)) * P.E_max
@@ -663,89 +650,77 @@ def fig6_delay_energy():
 
             for k in range(K):
                 Hk = H_all[k]; Ek = E_res[k]; fk = f_cpu[k]; Tk = T_curr[k]
-                ht_k = h_T(Tk)
-                hl_k = hl_all[k]
+                ht_k = h_T(Tk); hl_k = hl_all[k]
 
-                # ---- CH selections ----
-                ch_c = int(np.argmax(Hk * (Ek / P.E_max)**0.5))   # CTRL game-theory proxy
-                ch_e = int(np.argmax(Ek))                           # energy-best
-                ch_r = int(rng.integers(0, N_k))                    # random
-                ch_l = int(rng.choice(N_k, p=Ek / Ek.sum()))        # LEACH probabilistic
-
-                # DRL: epsilon-greedy (ε=0.15) over learned composite score
-                drl_score = 0.40*Hk + 0.35*(Ek/P.E_max) + 0.25*(fk/fk.max()) \
-                            + rng.normal(0, 0.07, N_k)
-                ch_d = int(rng.integers(0, N_k)) \
-                       if rng.random() < 0.15 else int(np.argmax(drl_score))
-
-                # MCCCO: pure energy-best (mirrors energy-best CH pick)
+                ch_c = int(np.argmax(Hk * (Ek / P.E_max)**0.5))
+                ch_e = int(np.argmax(Ek))
+                ch_r = int(rng.integers(0, N_k))
+                ch_l = int(rng.choice(N_k, p=Ek / Ek.sum()))
+                drl_score = (0.40*Hk + 0.35*(Ek/P.E_max) + 0.25*(fk/fk.max())
+                             + rng.normal(0, 0.07, N_k))
+                ch_d = int(rng.integers(0, N_k)) if rng.random() < 0.15 \
+                       else int(np.argmax(drl_score))
                 ch_m = int(np.argmax(Ek))
 
-                # ---- Delay & energy per method ----
                 for m_name, ch_i in [
-                    ('CTRL (Proposed)', ch_c),
-                    ('Energy-best CH',  ch_e),
-                    ('Random CH',       ch_r),
-                    ('LEACH-style',     ch_l),
-                    ('DRL-based [30]',  ch_d),
-                    ('MCCCO [8]',       ch_m),
+                    ('CTRL (Proposed)', ch_c), ('Energy-best CH', ch_e),
+                    ('Random CH',       ch_r), ('LEACH-style',    ch_l),
+                    ('DRL-based [30]',  ch_d), ('MCCCO [8]',      ch_m),
                 ]:
                     if m_name == 'CTRL (Proposed)':
-                        f_eff = fk[ch_i] * ht_k[ch_i]             # thermal-corrected
-                        delay = P.tau_req / max(f_eff, 1e5) \
-                                + 0.003 * (1 - Hk[ch_i])           # health penalty
-                        ecost = (1 - Hk[ch_i]) * 0.5 * N_k
-
-                    elif m_name == 'DRL-based [30]':
-                        # No exact thermal model; partial proxy used in reward
-                        f_eff = fk[ch_i] * (0.70 + 0.30 * Hk[ch_i])
-                        mob_pen = rng.exponential(0.0018)           # mobility non-stationarity
-                        sick_pen = 0.002 * max(0, 0.20 - Hk[ch_i]) / 0.20  # no self-excl.
-                        delay = P.tau_req / max(f_eff, 1e5) \
-                                + 0.003 * (1 - Hk[ch_i]) + mob_pen + sick_pen
-                        ecost = (1 - Hk[ch_i]) * 0.5 * N_k * 1.18  # 18% energy overhead
-
-                    elif m_name == 'MCCCO [8]':
-                        # No thermal derating; link quality ignored
-                        f_eff = fk[ch_i]                           # raw frequency
-                        thermal_miss = 1.0 + 0.35 * (1 - ht_k[ch_i])  # missed throttle
-                        link_pen     = 0.006 * (1 - hl_k[ch_i])   # undetected link loss
-                        offload_pen  = 0.003 * (N_k / 4)           # greedy offloading cost
-                        delay = (P.tau_req / max(f_eff, 1e5)) * thermal_miss \
-                                + link_pen + offload_pen
-                        ecost = (1 - Ek[ch_i] / P.E_max) * 0.5 * N_k * 1.27
-
-                    else:  # Energy-best, Random, LEACH
                         f_eff = fk[ch_i] * ht_k[ch_i]
-                        delay = P.tau_req / max(f_eff, 1e5) + 0.003 * (1 - Hk[ch_i])
+                        delay = P.tau_req / max(f_eff, 1e5) + 0.003*(1 - Hk[ch_i])
+                        ecost = (1 - Hk[ch_i]) * 0.5 * N_k
+                    elif m_name == 'DRL-based [30]':
+                        f_eff = fk[ch_i] * (0.70 + 0.30*Hk[ch_i])
+                        mob_pen = rng.exponential(0.0018)
+                        sick_pen = 0.002 * max(0, 0.20 - Hk[ch_i]) / 0.20
+                        delay = P.tau_req / max(f_eff, 1e5) + 0.003*(1-Hk[ch_i]) \
+                                + mob_pen + sick_pen
+                        ecost = (1 - Hk[ch_i]) * 0.5 * N_k * 1.18
+                    elif m_name == 'MCCCO [8]':
+                        f_eff = fk[ch_i]
+                        thermal_miss = 1.0 + 0.35*(1 - ht_k[ch_i])
+                        link_pen = 0.006*(1 - hl_k[ch_i])
+                        offload_pen = 0.003*(N_k / 4)
+                        delay = (P.tau_req / max(f_eff, 1e5))*thermal_miss \
+                                + link_pen + offload_pen
+                        ecost = (1 - Ek[ch_i]/P.E_max) * 0.5 * N_k * 1.27
+                    else:
+                        f_eff = fk[ch_i] * ht_k[ch_i]
+                        delay = P.tau_req / max(f_eff, 1e5) + 0.003*(1 - Hk[ch_i])
                         ecost = (1 - Hk[ch_i]) * 0.5 * N_k
 
                     dl[m_name].append(delay * 1e3)
                     en[m_name].append(ecost)
 
-        for m in styles:
+        for m in schemes:
             delay_r[m].append(float(np.mean(dl[m])))
             energy_r[m].append(float(np.mean(en[m])))
 
+    # ── Grouped bar chart ──────────────────────────────────────────────
+    n_s   = len(schemes)
+    bar_w = 0.13
+    x     = np.arange(len(N_vals))
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
 
-    ax = axes[0]
-    for m, st in styles.items():
-        ax.plot(N_vals, delay_r[m], color=st['color'], marker=st['marker'],
-                ls=st['ls'], label=m, lw=2.0)
-    ax.set_xlabel('Number of UAVs $N$')
-    ax.set_ylabel('Average Task Completion Delay (ms)')
-    ax.set_title('(a) Task Delay vs Number of UAVs')
-    ax.legend(fontsize=7.5); ax.grid(True, alpha=0.3)
-
-    ax = axes[1]
-    for m, st in styles.items():
-        ax.plot(N_vals, energy_r[m], color=st['color'], marker=st['marker'],
-                ls=st['ls'], label=m, lw=2.0)
-    ax.set_xlabel('Number of UAVs $N$')
-    ax.set_ylabel('Normalised Energy Cost (arb.)')
-    ax.set_title('(b) CH Energy Cost vs Number of UAVs')
-    ax.legend(fontsize=7.5); ax.grid(True, alpha=0.3)
+    for ax, data, ylabel, title in [
+        (axes[0], delay_r,  'Average Task Completion Delay (ms)',  '(a) Task Delay vs Number of UAVs'),
+        (axes[1], energy_r, 'Normalised Energy Cost (arb.)',        '(b) CH Energy Cost vs Number of UAVs'),
+    ]:
+        for s_i, (m, clr, ht) in enumerate(zip(schemes, colors, hatches)):
+            offset = (s_i - n_s / 2 + 0.5) * bar_w
+            ax.bar(x + offset, data[m], bar_w,
+                   color=clr, hatch=ht, alpha=0.85, label=m,
+                   edgecolor='k', linewidth=0.5)
+        ax.set_xticks(x)
+        ax.set_xticklabels([f'$N$={n}' for n in N_vals], fontsize=9)
+        ax.set_xlabel('Number of UAVs $N$')
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        ax.legend(fontsize=7, ncol=2)
+        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_axisbelow(True)
 
     plt.tight_layout()
     plt.savefig('fig6_delay_energy.png')
@@ -874,33 +849,29 @@ def fig7_load_balance():
 
 def fig8_worker():
     """
-    Worker selection under stochastic channel/CPU conditions.
-
-    Actual completion time = Ttot * X, where X ~ LogNormal(0, σ_jitter).
-    Sigma_jitter is inversely related to health/QoS, so high-Psi workers
-    have tighter timing distributions → higher probability of beating the
-    deadline. Baselines (H, E, Random) miss this multi-dimensional signal.
+    Grouped bar chart: worker selection schemes vs task deadline.
+    5 representative deadline values for clean grouped bar format.
     """
-    rng   = np.random.default_rng(55)
-    N_w   = 8
-    n_tr  = 500
-    tau_loc = 4e6      # 4 M CPU-cycles per task (local to this figure)
-    ell_bit = 2e-3     # 8 kbit result payload per task
+    rng     = np.random.default_rng(55)
+    N_w     = 8
+    n_tr    = 500
+    tau_loc = 4e6
+    ell_bit = 2e-3
 
-    d_vals = np.linspace(0.008, 0.055, 9)   # deadline 8–55 ms
+    # 5 representative deadline values (ms) for bar chart
+    d_vals_ms = [10, 18, 28, 40, 55]
+    d_vals    = [v * 1e-3 for v in d_vals_ms]
 
-    w_styles = {
-        'CTRL Nash Bargaining': dict(color='b', marker='o'),
-        'Highest Health':       dict(color='g', marker='s'),
-        'Highest Energy':       dict(color='r', marker='^'),
-        'Random Worker':        dict(color='m', marker='D'),
-    }
-    crate = {m: [] for m in w_styles}
-    upsi  = {m: [] for m in w_styles}
+    schemes  = ['CTRL Nash Bargaining', 'Highest Health', 'Highest Energy', 'Random Worker']
+    colors   = ['steelblue', 'seagreen', 'tomato', 'mediumpurple']
+    hatches  = ['', '//', 'xx', '..']
+
+    crate = {m: [] for m in schemes}
+    upsi  = {m: [] for m in schemes}
 
     for dl in d_vals:
-        cr  = {m: [] for m in w_styles}
-        ps_m = {m: [] for m in w_styles}
+        cr   = {m: [] for m in schemes}
+        ps_m = {m: [] for m in schemes}
 
         for _ in range(n_tr):
             Hu    = rng.uniform(0.2, 1.0, N_w)
@@ -915,35 +886,22 @@ def fig8_worker():
             T_ht  = h_T(rng.uniform(293, 343, N_w))
             fu_res = fu * T_ht
 
-            # Nominal completion times
-            Ttot = np.array([
-                T_total_worker(fu_res[u], tau_loc, ell_bit, dCH[u])
-                for u in range(N_w)
-            ])
-            Psi = np.array([
-                Psi_worker(Hu[u], fu_res[u], Ru[u], QoS[u], dCH[u], vu[u], Ttot[u])
-                for u in range(N_w)
-            ])
+            Ttot = np.array([T_total_worker(fu_res[u], tau_loc, ell_bit, dCH[u])
+                             for u in range(N_w)])
+            Psi  = np.array([Psi_worker(Hu[u], fu_res[u], Ru[u], QoS[u],
+                                        dCH[u], vu[u], Ttot[u])
+                             for u in range(N_w)])
 
-            # Stochastic jitter: σ depends on composite quality (health × QoS)
-            quality  = np.clip(Hu * QoS, 0.01, 1.0)
-            sigma_jitter = 0.30 * (1.0 - quality)          # 0..0.30 log-std
-            # actual time for each worker (drawn once per trial)
-            X_jitter = np.exp(rng.normal(0, sigma_jitter))  # lognormal multiplier
-            T_actual = Ttot * X_jitter
+            quality      = np.clip(Hu * QoS, 0.01, 1.0)
+            sigma_jitter = 0.30 * (1.0 - quality)
+            X_jitter     = np.exp(rng.normal(0, sigma_jitter))
+            T_actual     = Ttot * X_jitter
 
-            # Feasibility: use NOMINAL time filter (Psi-based lookahead)
-            # plus hard health/energy/reliability constraints
-            feas = (
-                (Ttot <= dl * 1.25)               # nominal timing window (loosened)
-                & (Hu  >= 0.25)
-                & (Ru  >= 0.60)
-                & (Eu  >= P.E_task * 0.5)
-            )
-
+            feas = ((Ttot <= dl * 1.25) & (Hu >= 0.25)
+                    & (Ru >= 0.60) & (Eu >= P.E_task * 0.5))
             fi = np.where(feas)[0]
             if len(fi) == 0:
-                for m in w_styles:
+                for m in schemes:
                     cr[m].append(0); ps_m[m].append(0)
                 continue
 
@@ -955,34 +913,41 @@ def fig8_worker():
                 'Random Worker':        rng.choice(fi),
             }
             for m, u_s in sels.items():
-                # completion: actual time must beat deadline
                 completed = float(T_actual[u_s] <= dl)
                 cr[m].append(completed)
                 ps_m[m].append(float(Psi[u_s]) if completed else 0.0)
 
-        for m in w_styles:
+        for m in schemes:
             crate[m].append(np.mean(cr[m]) * 100)
             upsi[m].append(np.mean(ps_m[m]))
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+    # ── Grouped bar chart ──────────────────────────────────────────────
+    n_s   = len(schemes)
+    bar_w = 0.17
+    x     = np.arange(len(d_vals_ms))
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
 
-    ax = axes[0]
-    for m, st in w_styles.items():
-        ax.plot(d_vals * 1e3, crate[m], color=st['color'],
-                marker=st['marker'], label=m, lw=1.8)
-    ax.set_xlabel(r'Task Deadline $\delta_{\max}$ (ms)')
-    ax.set_ylabel('Task Completion Rate (%)')
-    ax.set_title('(a) Completion Rate vs Deadline')
-    ax.legend(fontsize=8); ax.set_ylim([0, 105])
-
-    ax = axes[1]
-    for m, st in w_styles.items():
-        ax.plot(d_vals * 1e3, upsi[m], color=st['color'],
-                marker=st['marker'], label=m, lw=1.8)
-    ax.set_xlabel(r'Task Deadline $\delta_{\max}$ (ms)')
-    ax.set_ylabel(r'Avg Worker Utility Score $\Psi_u$')
-    ax.set_title(r'(b) Worker Utility Score vs Deadline')
-    ax.legend(fontsize=8)
+    for ax, data, ylabel, title, ylim in [
+        (axes[0], crate, 'Task Completion Rate (%)',
+         r'(a) Completion Rate vs Deadline $\delta_{\max}$', (0, 108)),
+        (axes[1], upsi,  r'Avg Worker Utility Score $\Psi_u$',
+         r'(b) Worker Utility Score vs Deadline $\delta_{\max}$', None),
+    ]:
+        for s_i, (m, clr, ht) in enumerate(zip(schemes, colors, hatches)):
+            offset = (s_i - n_s / 2 + 0.5) * bar_w
+            ax.bar(x + offset, data[m], bar_w,
+                   color=clr, hatch=ht, alpha=0.85, label=m,
+                   edgecolor='k', linewidth=0.5)
+        ax.set_xticks(x)
+        ax.set_xticklabels([f'{d} ms' for d in d_vals_ms], fontsize=9)
+        ax.set_xlabel(r'Task Deadline $\delta_{\max}$')
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        ax.legend(fontsize=8)
+        ax.grid(True, alpha=0.3, axis='y')
+        ax.set_axisbelow(True)
+        if ylim:
+            ax.set_ylim(ylim)
 
     plt.tight_layout()
     plt.savefig('fig8_worker.png')
@@ -1268,35 +1233,74 @@ def fig12_delay_cdf():
                 d = P.tau_req/max(f_eff,1e5) + 0.003*(1-H[ch_i])
             delays_all[m_name].append(d * 1e3)   # ms
 
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+    # ── Grouped bar chart: P25 / P50 / P75 / P95 per scheme ──────────
+    scheme_names = list(schemes.keys())
+    colors_12    = ['steelblue', 'darkorange', 'saddlebrown',
+                    'seagreen',  'mediumpurple', 'tomato']
+    hatches_12   = ['', '//', '\\\\', 'xx', '..', '++']
+    percentiles  = [25, 50, 75, 95]
+    p_colors     = ['#c6dbef', '#6baed6', '#2171b5', '#08306b']  # blue gradient
 
-    # (a) CDF
+    pdata = {pct: [float(np.percentile(delays_all[m], pct)) for m in scheme_names]
+             for pct in percentiles}
+
+    n_s   = len(scheme_names)
+    bar_w = 0.13
+    x     = np.arange(n_s)
+
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
+
+    # (a) Stacked percentile breakdown — one group of 4 bars per scheme
     ax = axes[0]
-    for m, st in schemes.items():
-        sv = np.sort(delays_all[m])
-        ax.plot(sv, np.linspace(0, 1, len(sv)),
-                color=st['color'], ls=st['ls'], label=m, lw=2.0)
-    ax.set_xlabel('Task Completion Delay (ms)')
-    ax.set_ylabel(r'CDF  $P(\tau \leq x)$')
-    ax.set_title(r'(a) Delay CDF ($N=20$ UAVs)')
-    ax.legend(fontsize=7.5); ax.grid(True, alpha=0.3); ax.set_xlim(left=0)
+    bottom = np.zeros(n_s)
+    pct_labels = ['P0–P25', 'P25–P50', 'P50–P75', 'P75–P95']
+    pct_ranges = [
+        [pdata[25][i] for i in range(n_s)],
+        [pdata[50][i] - pdata[25][i] for i in range(n_s)],
+        [pdata[75][i] - pdata[50][i] for i in range(n_s)],
+        [pdata[95][i] - pdata[75][i] for i in range(n_s)],
+    ]
+    for seg, (lbl, pc, vals) in enumerate(zip(pct_labels, p_colors, pct_ranges)):
+        ax.bar(x, vals, 0.45, bottom=bottom,
+               color=pc, label=lbl, edgecolor='k', linewidth=0.4, alpha=0.9)
+        bottom += np.array(vals)
 
-    # (b) 95th-percentile bar chart (tail latency)
-    ax = axes[1]
-    p95 = {m: float(np.percentile(delays_all[m], 95)) for m in schemes}
-    p50 = {m: float(np.percentile(delays_all[m], 50)) for m in schemes}
-    labels = list(schemes.keys())
-    x = np.arange(len(labels))
-    c = [schemes[m]['color'] for m in labels]
-    ax.bar(x, [p95[m] for m in labels], 0.5, label='95th percentile',
-           color=c, alpha=0.85)
-    ax.bar(x, [p50[m] for m in labels], 0.5, label='Median',
-           color=c, alpha=0.45, hatch='//')
     ax.set_xticks(x)
-    ax.set_xticklabels([m.replace(' ', '\n') for m in labels], fontsize=7)
+    ax.set_xticklabels([m.replace(' ', '\n').replace('[', '\n[')
+                        for m in scheme_names], fontsize=7.5)
+    ax.set_ylabel('Task Completion Delay (ms)')
+    ax.set_title(r'(a) Delay Percentile Breakdown ($N=20$ UAVs)')
+    ax.legend(fontsize=8, loc='upper left'); ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
+
+    # (b) Grouped bars: median vs 95th percentile
+    bar_w2 = 0.35
+    ax = axes[1]
+    ax.bar(x - bar_w2/2, pdata[50], bar_w2,
+           color=[colors_12[i] for i in range(n_s)],
+           hatch='//', alpha=0.85, label='Median (P50)',
+           edgecolor='k', linewidth=0.5)
+    ax.bar(x + bar_w2/2, pdata[95], bar_w2,
+           color=[colors_12[i] for i in range(n_s)],
+           alpha=0.85, label='Tail (P95)',
+           edgecolor='k', linewidth=0.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels([m.replace(' ', '\n').replace('[', '\n[')
+                        for m in scheme_names], fontsize=7.5)
     ax.set_ylabel('Delay (ms)')
-    ax.set_title('(b) Median and 95th-Percentile Delay')
+    ax.set_title('(b) Median and 95th-Percentile Tail Latency')
     ax.legend(fontsize=8); ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
+
+    # Colour legend for schemes
+    from matplotlib.patches import Patch
+    handles = [Patch(color=colors_12[i], label=scheme_names[i])
+               for i in range(n_s)]
+    axes[1].legend(handles=[axes[1].get_legend_handles_labels()[0][0],
+                             axes[1].get_legend_handles_labels()[0][1]]
+                   + handles,
+                   labels=['Median (P50)', 'Tail (P95)'] + scheme_names,
+                   fontsize=6.5, ncol=2, loc='upper left')
 
     plt.tight_layout()
     plt.savefig('fig12_delay_cdf.png')
@@ -1379,29 +1383,56 @@ def fig13_ch_health():
             ch_H[m].append(float(np.mean(H_cl)))
             ch_NL[m].append(depletions[m])
 
-    t_ax = np.arange(T_slots)
-    smooth = lambda v: np.convolve(v, np.ones(7)/7, mode='same')
+    # ── Grouped bar chart: snapshot at t=50, t=100, t=150 ──────────────
+    colors_13  = ['steelblue', 'darkorange', 'saddlebrown',
+                  'seagreen',  'mediumpurple', 'tomato']
+    hatches_13 = ['', '//', '\\\\', 'xx', '..', '++']
+    scheme_names = list(schemes.keys())
+
+    snap_slots = [49, 99, 149]        # indices → t = 50, 100, 150
+    snap_labels = ['$t=50$', '$t=100$', '$t=150$']
+
+    n_s   = len(scheme_names)
+    n_g   = len(snap_slots)
+    bar_w = 0.12
+    x     = np.arange(n_g)
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
 
+    # (a) CH health at each snapshot
     ax = axes[0]
-    for m, st in schemes.items():
-        ax.plot(t_ax, smooth(ch_H[m]), color=st['color'],
-                marker=st['marker'], markevery=20, ls=st['ls'], label=m, lw=2.0)
-    ax.set_xlabel('Time Slot $t$')
+    for s_i, (m, clr, ht) in enumerate(zip(scheme_names, colors_13, hatches_13)):
+        vals   = [ch_H[m][t] for t in snap_slots]
+        offset = (s_i - n_s / 2 + 0.5) * bar_w
+        ax.bar(x + offset, vals, bar_w,
+               color=clr, hatch=ht, alpha=0.85, label=m,
+               edgecolor='k', linewidth=0.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels(snap_labels, fontsize=10)
+    ax.set_xlabel('Time Slot Snapshot')
     ax.set_ylabel(r'Average Elected CH Health $H_\mathrm{CH}$')
-    ax.set_title('(a) CH Health Quality Over Time')
-    ax.legend(fontsize=7.5); ax.grid(True, alpha=0.3)
+    ax.set_title('(a) CH Health at Snapshot Slots ($K=6$ clusters)')
+    ax.legend(fontsize=7, ncol=2)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
     ax.set_ylim([0, 1.05])
 
+    # (b) Cumulative depletions at each snapshot — grouped bars
     ax = axes[1]
-    for m, st in schemes.items():
-        ax.plot(t_ax, ch_NL[m], color=st['color'],
-                marker=st['marker'], markevery=20, ls=st['ls'], label=m, lw=2.0)
-    ax.set_xlabel('Time Slot $t$')
+    for s_i, (m, clr, ht) in enumerate(zip(scheme_names, colors_13, hatches_13)):
+        vals   = [ch_NL[m][t] for t in snap_slots]
+        offset = (s_i - n_s / 2 + 0.5) * bar_w
+        ax.bar(x + offset, vals, bar_w,
+               color=clr, hatch=ht, alpha=0.85, label=m,
+               edgecolor='k', linewidth=0.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels(snap_labels, fontsize=10)
+    ax.set_xlabel('Time Slot Snapshot')
     ax.set_ylabel('Cumulative UAV Depletions')
-    ax.set_title('(b) Network Lifetime: Cumulative Energy Depletions')
-    ax.legend(fontsize=7.5); ax.grid(True, alpha=0.3)
+    ax.set_title('(b) Network Energy Depletions at Snapshot Slots')
+    ax.legend(fontsize=7, ncol=2)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
 
     plt.tight_layout()
     plt.savefig('fig13_ch_health.png')
@@ -1630,27 +1661,50 @@ def fig15_fairness_lifetime():
             jfi_all[m].append(float(np.mean(jfi_tr[m])))
             nl_all[m].append(float(np.mean(nl_tr[m])))
 
+    # ── Grouped bar chart ──────────────────────────────────────────────
+    scheme_names = list(schemes.keys())
+    colors_15  = ['steelblue', 'darkorange', 'saddlebrown', 'seagreen', 'tomato']
+    hatches_15 = ['', '//', '\\\\', 'xx', '++']
+
+    n_s   = len(scheme_names)
+    bar_w = 0.14
+    x     = np.arange(len(speeds))
+
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
 
+    # (a) JFI grouped bars
     ax = axes[0]
-    for m, st in schemes.items():
-        ax.plot(speeds, jfi_all[m], color=st['color'], marker=st['marker'],
-                ls=st['ls'], label=m, lw=2.0)
+    for s_i, (m, clr, ht) in enumerate(zip(scheme_names, colors_15, hatches_15)):
+        offset = (s_i - n_s / 2 + 0.5) * bar_w
+        ax.bar(x + offset, jfi_all[m], bar_w,
+               color=clr, hatch=ht, alpha=0.85, label=m,
+               edgecolor='k', linewidth=0.5)
+    ax.axhline(1.0, color='k', ls=':', lw=1.2, label='Perfect fairness (JFI=1)')
+    ax.set_xticks(x)
+    ax.set_xticklabels([f'{v} m/s' for v in speeds], fontsize=9)
     ax.set_xlabel('UAV Max Speed (m/s)')
     ax.set_ylabel("Jain's Fairness Index (JFI)")
     ax.set_title("(a) Load Fairness vs UAV Mobility Speed")
-    ax.legend(fontsize=8); ax.grid(True, alpha=0.3)
-    ax.set_ylim([0.4, 1.05])
-    ax.axhline(1.0, color='k', ls=':', lw=1.0, label='Perfect fairness')
+    ax.legend(fontsize=7.5, ncol=2)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
+    ax.set_ylim([0.4, 1.08])
 
+    # (b) Network lifetime grouped bars
     ax = axes[1]
-    for m, st in schemes.items():
-        ax.plot(speeds, nl_all[m], color=st['color'], marker=st['marker'],
-                ls=st['ls'], label=m, lw=2.0)
+    for s_i, (m, clr, ht) in enumerate(zip(scheme_names, colors_15, hatches_15)):
+        offset = (s_i - n_s / 2 + 0.5) * bar_w
+        ax.bar(x + offset, nl_all[m], bar_w,
+               color=clr, hatch=ht, alpha=0.85, label=m,
+               edgecolor='k', linewidth=0.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels([f'{v} m/s' for v in speeds], fontsize=9)
     ax.set_xlabel('UAV Max Speed (m/s)')
     ax.set_ylabel('Network Lifetime (slots to first depletion)')
     ax.set_title('(b) Network Lifetime vs Mobility Speed')
-    ax.legend(fontsize=8); ax.grid(True, alpha=0.3)
+    ax.legend(fontsize=7.5, ncol=2)
+    ax.grid(True, alpha=0.3, axis='y')
+    ax.set_axisbelow(True)
 
     plt.tight_layout()
     plt.savefig('fig15_fairness_lifetime.png')
