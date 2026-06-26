@@ -1,0 +1,104 @@
+NEGATIVE OUTCOMES / LIMITATIONS
+1. Assumes Quasi-Static Channel Within Each Slot
+
+The entire SINR and coverage analysis assumes the channel g_im stays constant within one time slot (quasi-static assumption)
+In reality, for very high UAV speeds, channel can change faster than Δt = 1.34 ms
+The paper's constraint Δt ≤ T_c = 1.49 ms is satisfied at tested speeds, but at very high speeds (> 50 m/s) or high carrier frequencies this assumption may break down
+Risk: Coverage probability estimates become inaccurate, undermining the entire payoff function π_i
+
+
+2. NE Uniqueness Not Guaranteed in Sparse Clusters
+
+Theorem 3 (Uniqueness) requires the contraction condition κ < 1
+This condition fails for large cluster radii (sparse deployments)
+In Figure 9 (fig9_uniqueness), the κ > 1 region shows that for large ρ_k, multiple Nash Equilibria may exist
+The paper acknowledges this but does not provide a solution for the non-unique case
+Risk: In sparse FANETs, the best-response iteration could oscillate or converge to a suboptimal NE
+
+
+3. Health Index Weights Are Fixed (AHP-Derived)
+
+The AHP weights (w_E = 0.5, w_T = 0.25, w_L = 0.25) are derived once and fixed
+Different mission types may need different weights:
+
+High-speed maneuver missions: link quality (w_L) may matter more
+Long-endurance surveillance: energy (w_E) may need even higher weight
+High-computation missions: thermal (w_T) may dominate
+
+
+Risk: Fixed weights may produce suboptimal CH selection in mission types not considered during design
+
+
+4. DRL Comparison Uses a Simplified Synthetic Model
+
+In Figure 14 (fig14_convergence_drl), the DRL convergence curves are synthetically generated using a logistic function with Gaussian noise rather than running an actual DRL training loop
+The SAT values (0.72, 0.61, 0.48 for N = 8, 20, 32) are assumed, not measured from actual DRL training
+Risk: This weakens the DRL comparison — a properly tuned DRL implementation might perform better than the paper suggests. Reviewers may challenge this.
+
+
+5. Reputation Mechanism Relies on Historical Completion Rate Q_j
+
+The incentive-compatibility proof (Theorem 1 of Section VI) requires the discount factor δ to be large enough
+In highly dynamic FANETs with short mission lifetimes, the "sufficiently patient" assumption may not hold — clusters may have no long-term stake in reputation
+Short missions (single flight, disaster response) mean Q_j history has little weight
+Risk: Clusters could misreport their capacity in short missions without facing meaningful reputation penalties
+
+
+6. No Consideration of UAV Mobility Path Planning
+
+CTRL assumes UAVs hover at a fixed altitude H and positions change due to mobility, but does not optimize UAV trajectories
+The cluster centroid q̄_k changes over time but CTRL has no mechanism to reposition UAVs to maintain cluster structure
+Risk: Under high mobility (v = 50 m/s), clusters may physically break apart, invalidating the assumed cluster topology and communication range assumptions
+
+
+7. Synchronization Overhead Not Fully Modeled
+
+The CH election requires all N_k UAVs to broadcast their power p_i^(t) each iteration and receive {p_j^(t)} from all others
+At N_k = 10 UAVs and T_conv = 5 iterations, this is 50 beacon exchanges per election
+The paper allocates only "2 bytes overhead" per beacon but does not fully account for:
+
+Collision probability when multiple UAVs broadcast simultaneously
+Synchronization cost across K = 4 clusters running elections in parallel
+
+
+Risk: Real-world election overhead may be higher than the theoretical 20 ms estimate
+
+
+8. Task Model is Simplified (Single Task Type)
+
+The paper models tasks with a single CPU demand τ = 5 × 10^7 cycles
+Real FANETs handle heterogeneous tasks: image processing, video streaming, sensor fusion, control commands — each with very different computational profiles, deadlines, and data sizes
+Risk: CTRL's utility functions are calibrated for a single task type and may not generalize well to mixed workloads without re-parameterization
+
+
+9. Limited Real-World Validation
+
+All results are Monte Carlo simulations — no hardware experiments, no real UAV testbed
+Key channel parameters (η = 2.2, g_im ~ Exp(1)) are borrowed from existing literature
+Real UAV-to-UAV channels may exhibit:
+
+Rician fading (K-factor > 0) instead of pure Rayleigh
+Obstructed LoS due to terrain or buildings
+Non-stationary interference patterns
+
+
+Risk: Simulation-to-reality gap may reduce CTRL's performance advantage in deployment
+
+
+10. Incomplete Sections in the Submitted Paper
+
+Sections B (Research Challenges), C (Contribution) in the Introduction, and Section VII (Solution Approach) appear to be placeholder headings with no content
+This suggests the paper is still a work in progress and not yet in final publishable form
+Risk: Missing sections weaken the paper's overall argument and will likely require major revision before acceptance
+
+
+11. Scalability of Offloading Algorithm
+
+The cooperative offloading (Algorithm 2) performs up to 5 redistribution passes per slot
+For very large FANETs (many clusters K), the number of feasible neighbor checks grows
+The paper only tests up to K = 6 clusters — scalability to K = 10, 20 clusters is unvalidated
+Risk: Computational overhead of neighbor evaluation may become significant in large-scale deployments
+
+
+Consolidated Summary
+CategoryPositiveNegativeDelay32–78% reduction over baselinesQuasi-static channel may not hold at very high speedsEnergy18–52% reductionFixed AHP weights may not suit all mission typesConvergence3–5 iterations, analytically guaranteedNE uniqueness fails in sparse clustersLoad BalanceNear-zero variance in 2–3 slotsNo trajectory optimization to maintain cluster structureWorker Selection78% vs 61% at tight deadlinesSingle task type onlyNetwork Lifetime34–61% fewer depletionsShort missions undermine reputation mechanismMobility RobustnessJFI ≥ 0.97 at all speedsDRL comparison uses synthetic curves, not real trainingDeployabilityNo retraining neededNo real hardware validationTheoryFully proven theoremsSynchronization overhead underestimatedPaper CompletenessStrong mathematical frameworkKey sections still missing/incomplete
